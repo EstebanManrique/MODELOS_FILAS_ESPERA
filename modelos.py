@@ -16,7 +16,7 @@ def modelo_M_M_1(lamda, mu, tiempo,n):
         print("Cn: " + str(Cn))
         print("P0: "+ str(pCero))
         print("Pn: "+ str(pN) + ". Donde n = "+ str(n))
-        print("Número promedio de clientes en la cola (Lq): "+ str(Lq) + " clientes")
+        print("Número promedio de clientes en la cola (Lq): "+ str(Lq) + " clientes") 
         print("Número promedio de clientes en el sistema (L): "+ str(L) + " clientes")
         print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
         print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
@@ -39,7 +39,7 @@ def comprobacion_Modelo_M_M_1(lamda, mu, n):
     return True
 
 def modelo_M_M_s(lamda, mu, tiempo, s, n):
-    if comprobacion_Modelo_M_M_s(lamda, mu, tiempo, s, n):
+    if comprobacion_Modelo_M_M_s(lamda, mu, s, n):
         p = lamda / (s * mu)
         if n >= (s - 1):
             Cn = round((pow(lamda/mu, n) / factorial(n)),4)
@@ -72,7 +72,10 @@ def comprobacion_Modelo_M_M_s(lamda, mu, s, n):
     if(lamda < 0 or mu < 0):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
-    if(lamda > mu or lamda == mu):
+    """if(lamda > mu or lamda == mu):
+        print("El sistema siendo planeteado NO es estable. Lambda debe ser menor a mu")
+        return False"""
+    if(mu * s < lamda):
         print("El sistema siendo planeteado NO es estable. Lambda debe ser menor a mu")
         return False
     if(n < 0):
@@ -96,5 +99,5 @@ def factorial(numero):
     return factorial
 
 #modelo_M_M_1(2,3,"horas",1)
-modelo_M_M_s(2,3,"horas",2,1)
+modelo_M_M_s(3687,1850,"horas",2,1)
     
