@@ -2,6 +2,10 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import font as tkFont
+import matplotlib
+matplotlib.use("TkAgg")
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg,NavigationToolbar2Tk
+from matplotlib.figure import Figure
 
 class App(tk.Tk):
     
@@ -67,6 +71,18 @@ class App(tk.Tk):
     def showGraph(self,path_to_csv):
         grafica_frame = tk.Toplevel()
         grafica_frame.title("Grafica Historica")
+        f = Figure(figsize=(5,5),dpi=100)
+        a=f.add_subplot(111)
+        a.plot([1,2,3,4,5,6,7,8], [2,3,5,2,7,8,5,9])
+        
+        canvas = FigureCanvasTkAgg(f,master=grafica_frame)
+        canvas.get_tk_widget().pack(side=tk.TOP,fill=tk.BOTH,expand=True)
+        
+        toolbar= NavigationToolbar2Tk(canvas,grafica_frame)
+        toolbar.update()
+        canvas._tkcanvas.pack(side=tk.TOP,fill=tk.BOTH,expand=True)
+        
+        
         print(path_to_csv)
  
     def addToCsv(self,path_to_csv):
@@ -101,7 +117,7 @@ class App(tk.Tk):
                 label1=tk.Label(frame_result,text=self.arreglo_titulo[i]+" : "+self.descripciones[i],padx=10)
             label1.grid(column=3,row=i+1, sticky='w')
         addBtn = tk.Button(frame_result, 
-                           text="Limpiar Historico", 
+                           text="Añadir a Historico", 
                            font = ("Castellar",8),
                            fg="green", 
                            command=lambda: self.addToCsv(path_to_csv))
