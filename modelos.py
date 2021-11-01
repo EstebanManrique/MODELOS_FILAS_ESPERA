@@ -1,7 +1,9 @@
-#lambda: tasa media de llegadas(numeros de clientes esperados por unidad de tiempo)
-#mu: tasa media de servicios(numero de clientes que completan el servicio por unidad de tiempo)
-#tiempo: define la unidad de tiempo a ser utilizada por el modelo (segundos, minutos, días, semanas, meses)
-#n: ??
+import os
+import csv
+import matplotlib.pyplot as plt
+
+nombresArchivos = ["modelo_M_M_1.csv", "modelo_M_M_s.csv", "modelo_M_M_s_K.csv", "modelo_M_G_1.csv"]
+
 def modelo_M_M_1(lamda, mu, tiempo): #Se elimina n
     if comprobacion_Modelo_M_M_1(lamda, mu):
         p = round((lamda / mu), 4)
@@ -182,6 +184,103 @@ def comprobacion_Modelo_M_M_s_K(lamda, mu, s, K):
         return False; 
     return True
 
+def escrituraCsv(archivo, tiempoCola, tiempoSistema):
+    numeroEscenarios = 0
+    tiemposColas = []
+    tiemposSistema = []
+    if os.path.exists(archivo):
+        with open(archivo, "r", newline="") as file:
+            lector = csv.reader(file)
+            index = 0
+            for row in lector:
+                if index == 0:
+                    numeroEscenarios = row
+                    numeroEscenarios = int(numeroEscenarios[0])
+                if index == 1:
+                    tiemposColas = row
+                if index == 2:
+                    tiemposSistema = row
+                index += 1
+        numeroEscenarios += 1
+        tiemposSistema.append(str(float(tiempoSistema)))
+        tiemposColas.append(str(float(tiempoCola)))
+        with open(archivo, "w", newline="") as file:
+            escritor = csv.writer(file, delimiter=",")
+            escritor.writerow(str(numeroEscenarios))
+            escritor.writerow(tiemposColas)
+            escritor.writerow(tiemposSistema)
+    else:
+        with open(archivo, "w", newline="") as file:
+            escritor = csv.writer(file, delimiter=",")
+            contenido = []
+            contenido.extend([str(1), str(float(tiempoCola)), str((float(tiempoSistema)))])
+            for index in contenido:
+                escritor.writerow([index])
+
+def resetearCsv(archivo):
+    if os.path.exists(archivo):
+        os.remove(archivo)
+    else:
+        print("El archivo estadistico ya esta reseteado")
+
+def generarGraficaTiempos(archivo):
+    if os.path.exists(archivo):
+        with open(archivo, "r", newline="") as file:
+            lector = csv.reader(file)
+            infoArchivo = []
+            for row in lector:
+                infoArchivo.append(row)
+        numeroPuntos = int(infoArchivo[0][0])
+        indiceHistoricos = []
+        for index in range(1, numeroPuntos + 1):
+            indiceHistoricos.append(index)
+        for index in range(0, numeroPuntos):
+            infoArchivo[1][index] = float(infoArchivo[1][index])
+        for index in range(0, numeroPuntos):
+            infoArchivo[2][index] = float(infoArchivo[2][index])
+
+        promedioCola = promedio(infoArchivo[1])
+        promedioSistema = promedio(infoArchivo[2])
+        puntosCola = []
+        puntosSistema = []
+        for index in range(0, numeroPuntos):
+            puntosCola.append(promedioCola)
+            puntosSistema.append(promedioSistema)
+
+        plt.plot(indiceHistoricos, infoArchivo[1], label = "Tiempo en Cola")
+        plt.plot(indiceHistoricos, infoArchivo[2], label = "Tiempo en Sistema")
+        plt.plot(indiceHistoricos, puntosCola, label = "Promedio en Cola (" + str(promedioCola)+")")
+        plt.plot(indiceHistoricos, puntosSistema, label = "Promedio en Sistema (" + str(promedioSistema)+")")
+        plt.xlabel("Numero de simulacion")
+        plt.ylabel("Unidades de tiempo")
+        plt.xticks(range(indiceHistoricos[0], indiceHistoricos[len(indiceHistoricos) - 1] + 1))
+        plt.legend()
+        plt.show()
+    else:
+        print("No se tienen registros historicos para este modelo eb particular")
+
+def promedio(lista):
+    suma = 0
+    for element in lista:
+        suma += element
+    return (suma / len(lista))
+
 #modelo_M_M_1(2,3,"horas")
 #modelo_M_M_s(3687,1850,"horas",2)
-modelo_M_M_s_K(2,3,"horas",1,3)                                      
+#modelo_M_M_s_K(2,3,"horas",1,3)
+
+#Segundo parametro es Lq y Tercer parametro es L                                
+#escrituraCsv(nombresArchivos[0], 10, 8) 
+#escrituraCsv(nombresArchivos[1], 85, 52)
+#escrituraCsv(nombresArchivos[2], 98, 102)
+#escrituraCsv(nombresArchivos[3], 98, 102)
+
+#resetearCsv(nombresArchivos[0])
+#resetearCsv(nombresArchivos[1])
+#resetearCsv(nombresArchivos[2])
+#resetearCsv(nombresArchivos[3])
+
+generarGraficaTiempos(nombresArchivos[0])
+#generarGraficaTiempos(nombresArchivos[1])
+#generarGraficaTiempos(nombresArchivos[2])
+#generarGraficaTiempos(nombresArchivos[3])
