@@ -30,7 +30,7 @@ def comprobacion_Modelo_M_M_1(lamda, mu):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
     if(lamda > mu or lamda == mu):
-        print("El sistema siendo planeteado NO es estable. Lambda debe ser menor a mu")
+        print("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
         return False
     return True
 
@@ -81,18 +81,118 @@ def comprobacion_Modelo_M_M_s(lamda, mu, s):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
     """if(lamda > mu or lamda == mu):
-        print("El sistema siendo planeteado NO es estable. Lambda debe ser menor a mu")
+        print("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
         return False"""
     if(mu * s < lamda):
-        print("El sistema siendo planeteado NO es estable. Lambda debe ser menor a mu")
+        print("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
         return False
     if(s < 0):
         print("El valor de s es menor a 0. NO es aceptable")
-        return False;
+        return False
     if(s % 1 != 0):
-         print("El valor de s NO puede ser decimal")
-         return False; 
+        print("El valor de s NO puede ser decimal")
+        return False
     return True
+
+def modelo_M_G_1(lamda, mu, tiempo, desviacion):
+    if comprobacion_Modelo_M_G_1(lamda, mu, desviacion):
+        p = round((lamda / mu), 4)
+        pCero = round((1 - p), 4)
+        pN = str(pCero) + "(" + str(p) + " ** n)"    #round((pCero * pow(p, n)), 4)
+        Lq = round(((pow(lamda,2) * pow(desviacion,2))+ pow(p,2)/2*(1-p)) , 4) #formula de pollaczek khintchine
+        L = round((p + Lq), 4)
+        Wq = round((Lq/lamda), 4)
+        W = round((Wq + (1/mu)), 4)
+
+        print("------- Modelo M/G/1----------")
+        print("p: "+ str(p))
+        print("P0: "+ str(pCero))
+        print("Pn: "+ str(pN))
+        print("Número promedio de clientes en la cola (Lq): "+ str(Lq) + " clientes") 
+        print("Número promedio de clientes en el sistema (L): "+ str(L) + " clientes")
+        print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
+        print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
+        arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W]
+        return arreglo_valores_UI
+
+def comprobacion_Modelo_M_G_1(lamda, mu, desviacion):
+    if(lamda < 0 or mu < 0):
+        print("El sistema NO puede aceptar valores Negativos")
+        return False  
+    if(lamda > mu or lamda == mu):
+        print("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
+        return False
+    if(desviacion < 1 ):
+        print("El sistema M/G/1 tiene que tener una desv. estandar mayor a 0 ")
+        return False
+    return True
+
+def modelo_M_D_1(lamda, mu, tiempo):
+    if comprobacion_Modelo_M_D_1(lamda, mu):
+        p = round((lamda / mu), 4)
+        pCero = round((1 - p), 4)
+        pN = str(pCero) + "(" + str(p) + " ** n)"    #round((pCero * pow(p, n)), 4)
+        Lq = round((pow(p,2)/2*(1-p)) , 4) #formula de pollaczek khintchine con desv = 0
+        L = round((p + Lq), 4)
+        Wq = round((Lq/lamda), 4)
+        W = round((Wq + (1/mu)), 4)
+
+        print("------- Modelo M/D/1----------")
+        print("p: "+ str(p))
+        print("P0: "+ str(pCero))
+        print("Pn: "+ str(pN))
+        print("Número promedio de clientes en la cola (Lq): "+ str(Lq) + " clientes") 
+        print("Número promedio de clientes en el sistema (L): "+ str(L) + " clientes")
+        print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
+        print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
+        arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W]
+        return arreglo_valores_UI
+
+def comprobacion_Modelo_M_D_1(lamda, mu):
+    if(lamda < 0 or mu < 0):
+        print("El sistema NO puede aceptar valores Negativos")
+        return False  
+    if(lamda > mu or lamda == mu):
+        print("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
+        return False
+    return True
+
+def modelo_M_Ek_1(lamda, mu, tiempo, k):
+    if comprobacion_modelo_M_Ek_1(lamda,mu,k):
+        p = round((lamda / mu), 4)
+        pCero = round((1 - p), 4)
+        pN = str(pCero) + "(" + str(p) + " ** n)"    #round((pCero * pow(p, n)), 4)
+        Lq = round(( ( (1+k) / 2*k) * (pow(lamda,2)/ mu *(mu - lamda) )) , 4) #formula de pollaczek khintchine para modelo Erlang
+        Wq = round((Lq/ lamda), 4)
+        W = round((Wq + (1/mu)), 4)
+        L = round((lamda * W), 4)
+
+        print("------- Modelo M/Ek/1----------")
+        print("p: "+ str(p))
+        print("P0: "+ str(pCero))
+        print("Pn: "+ str(pN))
+        print("Número promedio de clientes en la cola (Lq): "+ str(Lq) + " clientes") 
+        print("Número promedio de clientes en el sistema (L): "+ str(L) + " clientes")
+        print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
+        print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
+        arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W]
+        return arreglo_valores_UI
+    
+def comprobacion_modelo_M_Ek_1(lamda, mu, k):
+    if(lamda < 0 or mu < 0):
+        print("El sistema NO puede aceptar valores Negativos")
+        return False  
+    if(lamda > mu or lamda == mu):
+        print("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
+        return False
+    if(k < 0):
+        print("El valor de k es menor a 0. NO es aceptable")
+        return False
+    if(k % 1 != 0):
+         print("El valor de k NO puede ser decimal")
+         return False
+    return True
+
 
 def factorial(numero):
     factorial = 1
@@ -165,7 +265,7 @@ def comprobacion_Modelo_M_M_s_K(lamda, mu, s, K):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
     if(mu * s < lamda):
-        print("El sistema siendo planeteado NO es estable. Lambda debe ser menor a mu")
+        print("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
         return False
     if(K < 0):
         print("El valor de K es menor a 0. NO es aceptable")
