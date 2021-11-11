@@ -4,8 +4,9 @@ import matplotlib.pyplot as plt
 
 nombresArchivos = ["modelo_M_M_1.csv", "modelo_M_M_s.csv", "modelo_M_M_s_K.csv", "modelo_M_G_1.csv"]
 
-def modelo_M_M_1(lamda, mu, tiempo): #Se elimina n
+def modelo_M_M_1(lamda, mu, tiempo, Cw, Cs): #Se elimina n
     if comprobacion_Modelo_M_M_1(lamda, mu):
+        s = 1
         p = round((lamda / mu), 4)
         Cn = str(p) + " ** n" #round((pow(p, n)),4) 
         pCero = round((1 - p), 4)
@@ -14,6 +15,12 @@ def modelo_M_M_1(lamda, mu, tiempo): #Se elimina n
         L = round((lamda / (mu - lamda)), 4)
         Wq = round((lamda /(mu * (mu - lamda))), 4)
         W = round((1 / (mu - lamda)), 4)
+
+        #Costos
+        Cs = s * Cs
+        Cw = Lq * Cw
+        Ct = round(Cw + Cs,4)
+
         print("p: "+ str(p))
         print("Cn: " + str(Cn))
         print("P0: "+ str(pCero))
@@ -22,20 +29,26 @@ def modelo_M_M_1(lamda, mu, tiempo): #Se elimina n
         print("Número promedio de clientes en el sistema (L): "+ str(L) + " clientes")
         print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
         print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
-        arreglo_valores_UI = [p, Cn, pCero, pN, Lq, L, Wq, W]
+
+        print("El Costo Total de Servicio es " + str(Ct)) 
+        arreglo_valores_UI = [p, Cn, pCero, pN, Lq, L, Wq, W, Ct]
         return arreglo_valores_UI
 
-def comprobacion_Modelo_M_M_1(lamda, mu):
+
+def comprobacion_Modelo_M_M_1(lamda, mu, Cw, Cs):
     if(lamda < 0 or mu < 0):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
     if(lamda > mu or lamda == mu):
         print("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
         return False
+    if(Cw < 0 or Cs < 0):
+        print("El sistema NO puede aceptar costos Negativos")
+        return False
     return True
 
-def modelo_M_M_s(lamda, mu, tiempo, s):
-    if comprobacion_Modelo_M_M_s(lamda, mu, s):
+def modelo_M_M_s(lamda, mu, tiempo, s,Cw, Cs):
+    if comprobacion_Modelo_M_M_s(lamda, mu, s,Cw, Cs):
         p = round((lamda / (s * mu)), 4)
         Cn = []
         Cn1 = "(" + str(round((lamda/mu), 4)) + " ** n) / n!"
@@ -61,6 +74,12 @@ def modelo_M_M_s(lamda, mu, tiempo, s):
         L = round((Lq + (lamda / mu)), 4)
         Wq = round((Lq / lamda), 4)
         W = round((Wq + (1/mu)), 4)
+
+        #Costos
+        Cs = s * Cs
+        Cw = Lq * Cw
+        Ct = round(Cw + Cs,4)
+
         print("p: "+ str(p))
         #print("Cn: " + str(Cn) + ". Donde n = "+ str(n) + " y s = " + str(s))
         print("Cn1: " + str(Cn1) + " para casos donde n = 1,2,...,s-1")
@@ -73,10 +92,12 @@ def modelo_M_M_s(lamda, mu, tiempo, s):
         print("Número promedio de clientes en el sistema (L): "+ str(L) + " clientes")
         print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
         print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
-        arreglo_valores_UI = [p, Cn, pCero, pN, Lq, L, Wq, W]
+
+        print("El Costo Total de Servicio es " + str(Ct)) 
+        arreglo_valores_UI = [p, Cn, pCero, pN, Lq, L, Wq, W, Ct]
         return arreglo_valores_UI
 
-def comprobacion_Modelo_M_M_s(lamda, mu, s):
+def comprobacion_Modelo_M_M_s(lamda, mu, s, Cw, Cs):
     if(lamda < 0 or mu < 0):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
@@ -92,107 +113,10 @@ def comprobacion_Modelo_M_M_s(lamda, mu, s):
     if(s % 1 != 0):
         print("El valor de s NO puede ser decimal")
         return False
-    return True
-
-def modelo_M_G_1(lamda, mu, tiempo, desviacion):
-    if comprobacion_Modelo_M_G_1(lamda, mu, desviacion):
-        p = round((lamda / mu), 4)
-        pCero = round((1 - p), 4)
-        pN = str(pCero) + "(" + str(p) + " ** n)"    #round((pCero * pow(p, n)), 4)
-        Lq = round(((pow(lamda,2) * pow(desviacion,2))+ pow(p,2)/2*(1-p)) , 4) #formula de pollaczek khintchine
-        L = round((p + Lq), 4)
-        Wq = round((Lq/lamda), 4)
-        W = round((Wq + (1/mu)), 4)
-
-        print("------- Modelo M/G/1----------")
-        print("p: "+ str(p))
-        print("P0: "+ str(pCero))
-        print("Pn: "+ str(pN))
-        print("Número promedio de clientes en la cola (Lq): "+ str(Lq) + " clientes") 
-        print("Número promedio de clientes en el sistema (L): "+ str(L) + " clientes")
-        print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
-        print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
-        arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W]
-        return arreglo_valores_UI
-
-def comprobacion_Modelo_M_G_1(lamda, mu, desviacion):
-    if(lamda < 0 or mu < 0):
-        print("El sistema NO puede aceptar valores Negativos")
-        return False  
-    if(lamda > mu or lamda == mu):
-        print("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
-        return False
-    if(desviacion < 1 ):
-        print("El sistema M/G/1 tiene que tener una desv. estandar mayor a 0 ")
+    if(Cw < 0 or Cs < 0):
+        print("El sistema NO puede aceptar costos Negativos")
         return False
     return True
-
-def modelo_M_D_1(lamda, mu, tiempo):
-    if comprobacion_Modelo_M_D_1(lamda, mu):
-        p = round((lamda / mu), 4)
-        pCero = round((1 - p), 4)
-        pN = str(pCero) + "(" + str(p) + " ** n)"    #round((pCero * pow(p, n)), 4)
-        Lq = round((pow(p,2)/2*(1-p)) , 4) #formula de pollaczek khintchine con desv = 0
-        L = round((p + Lq), 4)
-        Wq = round((Lq/lamda), 4)
-        W = round((Wq + (1/mu)), 4)
-
-        print("------- Modelo M/D/1----------")
-        print("p: "+ str(p))
-        print("P0: "+ str(pCero))
-        print("Pn: "+ str(pN))
-        print("Número promedio de clientes en la cola (Lq): "+ str(Lq) + " clientes") 
-        print("Número promedio de clientes en el sistema (L): "+ str(L) + " clientes")
-        print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
-        print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
-        arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W]
-        return arreglo_valores_UI
-
-def comprobacion_Modelo_M_D_1(lamda, mu):
-    if(lamda < 0 or mu < 0):
-        print("El sistema NO puede aceptar valores Negativos")
-        return False  
-    if(lamda > mu or lamda == mu):
-        print("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
-        return False
-    return True
-
-def modelo_M_Ek_1(lamda, mu, tiempo, k):
-    if comprobacion_modelo_M_Ek_1(lamda,mu,k):
-        p = round((lamda / mu), 4)
-        pCero = round((1 - p), 4)
-        pN = str(pCero) + "(" + str(p) + " ** n)"    #round((pCero * pow(p, n)), 4)
-        Lq = round(( ( (1+k) / 2*k) * (pow(lamda,2)/ mu *(mu - lamda) )) , 4) #formula de pollaczek khintchine para modelo Erlang
-        Wq = round((Lq/ lamda), 4)
-        W = round((Wq + (1/mu)), 4)
-        L = round((lamda * W), 4)
-
-        print("------- Modelo M/Ek/1----------")
-        print("p: "+ str(p))
-        print("P0: "+ str(pCero))
-        print("Pn: "+ str(pN))
-        print("Número promedio de clientes en la cola (Lq): "+ str(Lq) + " clientes") 
-        print("Número promedio de clientes en el sistema (L): "+ str(L) + " clientes")
-        print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
-        print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
-        arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W]
-        return arreglo_valores_UI
-    
-def comprobacion_modelo_M_Ek_1(lamda, mu, k):
-    if(lamda < 0 or mu < 0):
-        print("El sistema NO puede aceptar valores Negativos")
-        return False  
-    if(lamda > mu or lamda == mu):
-        print("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
-        return False
-    if(k < 0):
-        print("El valor de k es menor a 0. NO es aceptable")
-        return False
-    if(k % 1 != 0):
-         print("El valor de k NO puede ser decimal")
-         return False
-    return True
-
 
 def factorial(numero):
     factorial = 1
@@ -200,8 +124,8 @@ def factorial(numero):
         factorial = factorial * i
     return factorial
 
-def modelo_M_M_s_K(lamda, mu, tiempo, s, K):
-    if comprobacion_Modelo_M_M_s_K(lamda, mu, s, K):
+def modelo_M_M_s_K(lamda, mu, tiempo, s, K, Cw, Cs):
+    if comprobacion_Modelo_M_M_s_K(lamda, mu, s, K, Cw, Cs):
         p = round((lamda / (s * mu)), 4)
         Cn = []
         Cn1 = "(" + str(round((lamda/mu), 4)) + " ** n) / n!"
@@ -244,6 +168,12 @@ def modelo_M_M_s_K(lamda, mu, tiempo, s, K):
         Wq = round((Lq / lamdaE), 4)
         W = round((Wq + (1 / mu)), 4)
         L = round((lamdaE * W), 4)
+
+        #Costos
+        Cs = s * Cs
+        Cw = Lq * Cw
+        Ct = round(Cw + Cs,4)
+
         print("p: "+ str(p))
         #print("Cn: " + str(Cn) + ". Donde n = "+ str(n) + ", s = " + str(s) + " y K = " + str(K))
         print("Cn1: " + str(Cn1) + " para casos donde n = 0,1,2,...,s-1")
@@ -259,8 +189,13 @@ def modelo_M_M_s_K(lamda, mu, tiempo, s, K):
         print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
         print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
         print("La tasa efectiva de arribo al sistema es (lammdaE): "+ str(lamdaE) + " clientes por " + tiempo[:-1])
+    
+        print("El Costo Total de Servicio es " + str(Ct)) 
 
-def comprobacion_Modelo_M_M_s_K(lamda, mu, s, K):
+        #arreglo_valores_UI = [p, Cn, pCero, pN, Lq, L, Wq, W, Ct]
+        #return arreglo_valores_UI
+
+def comprobacion_Modelo_M_M_s_K(lamda, mu, s, K, Cw, Cs):
     if(lamda < 0 or mu < 0):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
@@ -269,19 +204,159 @@ def comprobacion_Modelo_M_M_s_K(lamda, mu, s, K):
         return False
     if(K < 0):
         print("El valor de K es menor a 0. NO es aceptable")
-        return False;
+        return False
     if(K % 1 != 0):
         print("El valor de K NO puede ser decimal")
-        return False; 
+        return False
     if(s < 0):
         print("El valor de s es menor a 0. NO es aceptable")
-        return False;
+        return False
     if(s % 1 != 0):
          print("El valor de s NO puede ser decimal")
-         return False;
+         return False
     if(s > K):
         print("El valor de K debe ser menor o igual a S para este modelo")
-        return False; 
+        return False
+    if(Cw < 0 or Cs < 0):
+        print("El sistema NO puede aceptar costos Negativos")
+        return False
+    return True
+
+def modelo_M_G_1(lamda, mu, tiempo, desviacion, Cw, Cs):
+    if comprobacion_Modelo_M_G_1(lamda, mu, desviacion, Cw, Cs):
+        s = 1 #Pero hay que checar svenx
+        p = round((lamda / mu), 4)
+        pCero = round((1 - p), 4)
+        pN = str(pCero) + "(" + str(p) + " ** n)"    #round((pCero * pow(p, n)), 4)
+        Lq = round(((pow(lamda,2) * pow(desviacion,2))+ pow(p,2)/2*(1-p)) , 4) #formula de pollaczek khintchine
+        L = round((p + Lq), 4)
+        Wq = round((Lq/lamda), 4)
+        W = round((Wq + (1/mu)), 4)
+
+        #Costos
+        Cs = s * Cs
+        Cw = Lq * Cw
+        Ct = round(Cw + Cs,4)
+
+        print("------- Modelo M/G/1----------")
+        print("p: "+ str(p))
+        print("P0: "+ str(pCero))
+        print("Pn: "+ str(pN))
+        print("Número promedio de clientes en la cola (Lq): "+ str(Lq) + " clientes") 
+        print("Número promedio de clientes en el sistema (L): "+ str(L) + " clientes")
+        print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
+        print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
+
+        print("El Costo Total de Servicio es " + str(Ct)) 
+
+        arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W, Ct]
+        return arreglo_valores_UI
+
+def comprobacion_Modelo_M_G_1(lamda, mu, desviacion, Cw, Cs):
+    if(lamda < 0 or mu < 0):
+        print("El sistema NO puede aceptar valores Negativos")
+        return False  
+    if(lamda > mu or lamda == mu):
+        print("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
+        return False
+    if(desviacion < 1 ):
+        print("El sistema M/G/1 tiene que tener una desv. estandar mayor a 0 ")
+        return False
+    if(Cw < 0 or Cs < 0):
+        print("El sistema NO puede aceptar costos Negativos")
+        return False
+    return True
+
+def modelo_M_D_1(lamda, mu, tiempo, Cw, Cs):
+    if comprobacion_Modelo_M_D_1(lamda, mu, Cw, Cs):
+        s = 1 #Pero hay que checar svenx
+
+        p = round((lamda / mu), 4)
+        pCero = round((1 - p), 4)
+        pN = str(pCero) + "(" + str(p) + " ** n)"    #round((pCero * pow(p, n)), 4)
+        Lq = round((pow(p,2)/2*(1-p)) , 4) #formula de pollaczek khintchine con desv = 0
+        L = round((p + Lq), 4)
+        Wq = round((Lq/lamda), 4)
+        W = round((Wq + (1/mu)), 4)
+
+        #Costos
+        Cs = s * Cs
+        Cw = Lq * Cw
+        Ct = round(Cw + Cs,4)
+
+        print("------- Modelo M/D/1----------")
+        print("p: "+ str(p))
+        print("P0: "+ str(pCero))
+        print("Pn: "+ str(pN))
+        print("Número promedio de clientes en la cola (Lq): "+ str(Lq) + " clientes") 
+        print("Número promedio de clientes en el sistema (L): "+ str(L) + " clientes")
+        print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
+        print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
+
+        print("El Costo Total de Servicio es " + str(Ct)) 
+
+        arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W, Ct]
+        return arreglo_valores_UI
+
+def comprobacion_Modelo_M_D_1(lamda, mu, Cw, Cs):
+    if(lamda < 0 or mu < 0):
+        print("El sistema NO puede aceptar valores Negativos")
+        return False  
+    if(lamda > mu or lamda == mu):
+        print("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
+        return False
+    if(Cw < 0 or Cs < 0):
+        print("El sistema NO puede aceptar costos Negativos")
+        return False
+    return True
+
+def modelo_M_Ek_1(lamda, mu, tiempo, k, Cw, Cs):
+    if comprobacion_modelo_M_Ek_1(lamda,mu,k, Cw, Cs):
+        s = 1 #Pero hay que checar svenx
+
+        p = round((lamda / mu), 4)
+        pCero = round((1 - p), 4)
+        pN = str(pCero) + "(" + str(p) + " ** n)"    #round((pCero * pow(p, n)), 4)
+        Lq = round(( ( (1+k) / 2*k) * (pow(lamda,2)/ mu *(mu - lamda) )) , 4) #formula de pollaczek khintchine para modelo Erlang
+        Wq = round((Lq/ lamda), 4)
+        W = round((Wq + (1/mu)), 4)
+        L = round((lamda * W), 4)
+
+        #Costos
+        Cs = s * Cs
+        Cw = Lq * Cw
+        Ct = round(Cw + Cs,4)
+
+        print("------- Modelo M/Ek/1----------")
+        print("p: "+ str(p))
+        print("P0: "+ str(pCero))
+        print("Pn: "+ str(pN))
+        print("Número promedio de clientes en la cola (Lq): "+ str(Lq) + " clientes") 
+        print("Número promedio de clientes en el sistema (L): "+ str(L) + " clientes")
+        print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
+        print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
+
+        print("El Costo Total de Servicio es " + str(Ct)) 
+
+        arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W, Ct]
+        return arreglo_valores_UI
+    
+def comprobacion_modelo_M_Ek_1(lamda, mu, k, Cw, Cs):
+    if(lamda < 0 or mu < 0):
+        print("El sistema NO puede aceptar valores Negativos")
+        return False  
+    if(lamda > mu or lamda == mu):
+        print("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
+        return False
+    if(k < 0):
+        print("El valor de k es menor a 0. NO es aceptable")
+        return False
+    if(k % 1 != 0):
+         print("El valor de k NO puede ser decimal")
+         return False
+    if(Cw < 0 or Cs < 0):
+        print("El sistema NO puede aceptar costos Negativos")
+        return False
     return True
 
 def escrituraCsv(archivo, tiempoCola, tiempoSistema):
@@ -380,7 +455,7 @@ def promedio(lista):
 #resetearCsv(nombresArchivos[2])
 #resetearCsv(nombresArchivos[3])
 
-generarGraficaTiempos(nombresArchivos[0])
+#generarGraficaTiempos(nombresArchivos[0])
 #generarGraficaTiempos(nombresArchivos[1])
 #generarGraficaTiempos(nombresArchivos[2])
 #generarGraficaTiempos(nombresArchivos[3])
