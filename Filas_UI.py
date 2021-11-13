@@ -40,7 +40,9 @@ class App(tk.Tk):
         self.menu = ("Modelo M/M/1",
                      "Modelo M/M/s",
                      "Modelo M/M/s/K",
-                     "Modelo M/G/1")
+                     "Modelo M/G/1",
+                     "Modelo M/D/1",
+                     "Modelo M/Erlang/1")
 
         # Variables para manjear las opciones del menu en caso de comprobaciones
         self.option = tk.StringVar(self)
@@ -66,12 +68,6 @@ class App(tk.Tk):
         self.errorMessage = tk.Label(
             self.frame,  textvariable=self.errorText, font=("Castellar", 8), fg="red")
 
-        self.clearBtn = tk.Button(
-            self, text="Limpiar Historico", font=("Castellar", 8), fg="red")
-
-        self.showBtn = tk.Button(
-            self, text="Mostrar Historico", font=("Castellar", 8))
-
         # option menu
         option_menu = tk.OptionMenu(
             self,
@@ -82,12 +78,6 @@ class App(tk.Tk):
         helv36 = tkFont.Font(family='Castellar', size=8)
         option_menu.config(font=helv36)
         option_menu.grid(column=1, row=0, sticky='e', **paddings, columnspan=2)
-
-    def clearData(self, archivo):
-        if os.path.exists(archivo):
-            os.remove(archivo)
-        else:
-            print("El archivo estadistico ya esta reseteado")
 
     def promedio(self, lista):
         suma = 0
@@ -199,10 +189,9 @@ class App(tk.Tk):
                     frame_result, text=self.arreglo_titulo[i]+" : "+self.descripciones[i], padx=10)
             label1.grid(column=3, row=i+1, sticky='w')
         addBtn = tk.Button(frame_result,
-                           text="Añadir a Historico",
+                           text="Costos y Probabilidades",
                            font=("Castellar", 8),
-                           fg="green",
-                           command=lambda: self.escrituraCsv(path_to_csv, arreglo[1][6], arreglo[1][7]))
+                           fg="green")
         addBtn.grid(column=0, row=10, columnspan=5, pady=10)
 
     def mm1_tabla_latex(self, arreglo, frame_result, size):
@@ -282,10 +271,9 @@ class App(tk.Tk):
                 x += 1
 
         addBtn = tk.Button(frame_result,
-                           text="Añadir a Historico",
+                           text="Costos y Probabilidades",
                            font=("Castellar", 8),
-                           fg="green",
-                           command=lambda: self.escrituraCsv("modelo_M_M_s.csv", arreglo[1][6], arreglo[1][7]))
+                           fg="green")
         addBtn.grid(column=0, row=12, columnspan=5, pady=10)
 
     def mms_tabla_latex(self, arreglo, frame_result, size):
@@ -376,10 +364,9 @@ class App(tk.Tk):
                 x += 1
 
         addBtn = tk.Button(frame_result,
-                           text="Añadir a Historico",
+                           text="Costos y Probabilidades",
                            font=("Castellar", 8),
-                           fg="green",
-                           command=lambda: self.escrituraCsv("modelo_M_M_s_K.csv", arreglo[1][6], arreglo[1][7]))
+                           fg="green")
         addBtn.grid(column=0, row=15, columnspan=5, pady=10)
 
     def mmsK_tabla_latex(self, arreglo, frame_result, size):
@@ -710,7 +697,7 @@ class App(tk.Tk):
     def m_m_1_frame(self, *args):
         # Loop para limpiar los widgets del frame para cambiar entre las opciones del menu
         self.frame['text'] = "m_m_1_frame"
-        self.setHistoricoBtns("modelo_M_M_1.csv")
+        
 
         for widget in self.frame.winfo_children():
             widget.destroy()
@@ -760,7 +747,7 @@ class App(tk.Tk):
     def m_m_s_frame(self, *args):
         # Loop para limpiar los widgets del frame para cambiar entre las opciones del menu
         self.frame['text'] = "m_m_s_frame"
-        self.setHistoricoBtns("modelo_M_M_s.csv")
+       
 
         for widget in self.frame.winfo_children():
             widget.destroy()
@@ -818,7 +805,7 @@ class App(tk.Tk):
     def m_m_s_K_frame(self, *args):
         # Loop para limpiar los widgets del frame para cambiar entre las opciones del menu
         self.frame['text'] = "m_m_s_K_frame"
-        self.setHistoricoBtns("modelo_M_M_s_K.csv")
+       
 
         for widget in self.frame.winfo_children():
             widget.destroy()
@@ -881,7 +868,116 @@ class App(tk.Tk):
 
         # Loop para limpiar los widgets del frame para cambiar entre las opciones del menu
         self.frame['text'] = "m_G_1_frame"
-        self.setHistoricoBtns("modelo_M_G_1.csv")
+
+        for widget in self.frame.winfo_children():
+            widget.destroy()
+
+        # Display de los inputs necesarios para el método
+        lambda_label = ttk.Label(self.frame,  text='Tasa de llegadas (lambda) :', font=(
+            "Castellar", 8)).grid(column=0, row=1, padx=10, pady=20, sticky="e")
+        lambda_input = tk.Entry(self.frame, width=20)
+        lambda_input.grid(column=1, row=1, padx=40)
+
+        mu_label = ttk.Label(self.frame,  text='Tasa de Servicio (mu) :', font=(
+            "Castellar", 8)).grid(column=0, row=2, padx=10, pady=20, sticky="e")
+        mu_input = tk.Entry(self.frame, width=20)
+        mu_input.grid(column=1, row=2, padx=10)
+
+        tiempo_label = ttk.Label(self.frame,  text='Unidad de Tiempo :', font=(
+            "Castellar", 8)).grid(column=0, row=3, padx=10, pady=20, sticky="e")
+        tiempo_input = tk.Entry(self.frame, width=20)
+        tiempo_input.grid(column=1, row=3, padx=10)
+
+        dst_label = ttk.Label(self.frame,  text='Desvisacion Estandar:', font=(
+            "Castellar", 8)).grid(column=0, row=4, padx=10, pady=20, sticky="e")
+        dst_input = tk.Entry(self.frame, width=20)
+        dst_input.grid(column=1, row=4, padx=10)
+
+        sumbit_btn = tk.Button(self.frame, text="Generar", font=("Castellar", 8),
+                               command=lambda: self.aux_m_G_1_frame(lambda_input, mu_input, tiempo_input,dst_input))
+        sumbit_btn.grid(column=0, row=6, columnspan=3, pady=20)
+
+    def aux_m_G_1_frame(self, lambda_input, mu_input, tiempo_input, dst_input):
+        # Método auxiliar para extraer los datos de los inputs y validar los datos dentro decada input
+        self.errorText.set(' ')
+        self.errorMessage = tk.Label(
+            self.frame,  textvariable=self.errorText, font=("Castellar", 8), fg="red")
+        if lambda_input.get() != '' and mu_input.get() != '' and tiempo_input.get() != '' and dst_input.get() != '' :
+            try:
+                x1 = float(lambda_input.get())
+                x2 = float(mu_input.get())
+                x3 = float(dst_input.get())
+            except:
+                self.errorText.set(
+                    'Lambda, mu, n y el no. de servidores deben ser números')
+                self.errorMessage.grid(column=0, row=0, columnspan=2)
+                return
+            if True:
+                print("M/G/1 DEBUG")
+                #self.modelo_M_M_1(x1, x2, tiempo_input.get(), x4)
+
+        else:
+            # Mensaje de error para inputs vacios
+            self.errorText.set('Favor de llenar todos los rubros')
+            self.errorMessage.grid_configure(column=0, row=0, columnspan=2)
+
+
+    def m_D_1_frame(self, *args):
+
+        # Loop para limpiar los widgets del frame para cambiar entre las opciones del menu
+        self.frame['text'] = "m_D_1_frame"
+
+        for widget in self.frame.winfo_children():
+            widget.destroy()
+
+        # Display de los inputs necesarios para el método
+        lambda_label = ttk.Label(self.frame,  text='Tasa de llegadas (lambda) :', font=(
+            "Castellar", 8)).grid(column=0, row=1, padx=10, pady=20, sticky="e")
+        lambda_input = tk.Entry(self.frame, width=20)
+        lambda_input.grid(column=1, row=1, padx=40)
+
+        mu_label = ttk.Label(self.frame,  text='Tasa de Servicio (mu) :', font=(
+            "Castellar", 8)).grid(column=0, row=2, padx=10, pady=20, sticky="e")
+        mu_input = tk.Entry(self.frame, width=20)
+        mu_input.grid(column=1, row=2, padx=10)
+
+        tiempo_label = ttk.Label(self.frame,  text='Unidad de Tiempo :', font=(
+            "Castellar", 8)).grid(column=0, row=3, padx=10, pady=20, sticky="e")
+        tiempo_input = tk.Entry(self.frame, width=20)
+        tiempo_input.grid(column=1, row=3, padx=10)
+
+        sumbit_btn = tk.Button(self.frame, text="Generar", font=(
+            "Castellar", 8), command=lambda: self.aux_m_D_1_frame(lambda_input, mu_input, tiempo_input))
+        sumbit_btn.grid(column=0, row=5, columnspan=3, pady=20)
+
+    def aux_m_D_1_frame(self, lambda_input, mu_input, tiempo_input):
+        # Método auxiliar para extraer los datos de los inputs y validar los datos dentro decada input
+        self.errorText.set(' ')
+        self.errorMessage = tk.Label(
+            self.frame,  textvariable=self.errorText, font=("Castellar", 8), fg="red")
+        if lambda_input.get() != '' and mu_input.get() != '' and tiempo_input.get() != '':
+            try:
+                x1 = float(lambda_input.get())
+                x2 = float(mu_input.get())
+
+            except:
+                self.errorText.set('Lambda, mu y n deben ser números')
+                self.errorMessage.grid(column=0, row=0, columnspan=2)
+                return
+            if True:
+                print("MD1")
+            # self.centrosCuadrados(x1,x2)
+        else:
+            # Mensaje de error para inputs vacios
+            self.errorText.set('Favor de llenar todos los rubros')
+            self.errorMessage.grid_configure(column=0, row=0, columnspan=2)
+
+
+
+    def m_erlang_s_frame(self, *args):
+
+        # Loop para limpiar los widgets del frame para cambiar entre las opciones del menu
+        self.frame['text'] = "m_Erlang_s_frame"
 
         for widget in self.frame.winfo_children():
             widget.destroy()
@@ -907,39 +1003,40 @@ class App(tk.Tk):
         server_input = tk.Entry(self.frame, width=20)
         server_input.grid(column=1, row=4, padx=10)
 
-        n_label = ttk.Label(self.frame,  text='N :', font=("Castellar", 8)).grid(
+        k_label = ttk.Label(self.frame,  text='K :', font=("Castellar", 8)).grid(
             column=0, row=5, padx=10, pady=20, sticky="e")
-        n_input = tk.Entry(self.frame, width=20)
-        n_input.grid(column=1, row=5, padx=10)
+        k_input = tk.Entry(self.frame, width=20)
+        k_input.grid(column=1, row=5, padx=10)
 
         sumbit_btn = tk.Button(self.frame, text="Generar", font=("Castellar", 8),
-                               command=lambda: self.aux_m_G_1_frame(lambda_input, mu_input, tiempo_input, n_input, server_input))
+                               command=lambda: self.aux_m_erlang_s_frame(lambda_input, mu_input, tiempo_input, k_input, server_input))
+
         sumbit_btn.grid(column=0, row=6, columnspan=3, pady=20)
 
-    def aux_m_G_1_frame(self, lambda_input, mu_input, tiempo_input, n_input, server_input):
+    def aux_m_erlang_s_frame(self, lambda_input, mu_input, tiempo_input, k_input, server_input):
         # Método auxiliar para extraer los datos de los inputs y validar los datos dentro decada input
         self.errorText.set(' ')
         self.errorMessage = tk.Label(
             self.frame,  textvariable=self.errorText, font=("Castellar", 8), fg="red")
-        if lambda_input.get() != '' and mu_input.get() != '' and tiempo_input.get() != '' and n_input.get() != '' and server_input.get() != '':
+        if lambda_input.get() != '' and mu_input.get() != '' and tiempo_input.get() != '' and k_input.get() != '' and server_input.get() != '':
             try:
                 x1 = float(lambda_input.get())
                 x2 = float(mu_input.get())
-                x3 = float(server_input.get())
-                x4 = float(n_input.get())
+                x3 = int(server_input.get())
+                x4 = int(k_input.get())
             except:
                 self.errorText.set(
                     'Lambda, mu, n y el no. de servidores deben ser números')
                 self.errorMessage.grid(column=0, row=0, columnspan=2)
                 return
             if True:
-                print("M/G/1 DEBUG")
-                #self.modelo_M_M_1(x1, x2, tiempo_input.get(), x4)
-
+                print("Erlang")
         else:
             # Mensaje de error para inputs vacios
             self.errorText.set('Favor de llenar todos los rubros')
             self.errorMessage.grid_configure(column=0, row=0, columnspan=2)
+
+
 
     def option_changed(self, *args):
         if self.option.get() == self.menu[0]:
@@ -950,12 +1047,11 @@ class App(tk.Tk):
             self.m_m_s_K_frame()
         elif self.option.get() == self.menu[3]:
             self.m_G_1_frame()
+        elif self.option.get() == self.menu[4]:
+            self.m_D_1_frame()
+        elif self.option.get() == self.menu[5]:
+            self.m_erlang_s_frame()
 
-    def setHistoricoBtns(self, path_to_csv):
-        self.clearBtn['command'] = lambda: self.clearData(path_to_csv)
-        self.showBtn['command'] = lambda: self.showGraph(path_to_csv)
-        self.clearBtn.grid(column=2, row=1, sticky='n', pady=(30, 0))
-        self.showBtn.grid(column=2, row=2, sticky='n')
 
 
 if __name__ == "__main__":
