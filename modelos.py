@@ -92,7 +92,7 @@ def comprobacion_Modelo_M_M_1(lamda, mu):
     if (((type(lamda) != (int)) and (type(lamda) != (float))) or ((type(mu) != (int)) and (type(mu) != (float)))):
         print("Lambda y Mu deben ser numeros Enteros/Decimales Positivos")
         return False
-    if(lamda < 0 or mu < 0):
+    if(lamda <= 0 or mu <= 0):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
     if(lamda > mu or lamda == mu):
@@ -196,7 +196,7 @@ def comprobacion_Modelo_M_M_s(lamda, mu, s):
     if (((type(lamda) != (int)) and (type(lamda) != (float))) and ((type(mu) != (int)) and (type(mu) != (float)))):
         print("Lambda y Mu deben ser numeros Enteros/Decimales Positivos")
         return False
-    if(lamda < 0 or mu < 0):
+    if(lamda <= 0 or mu <= 0):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
     if(mu * s <= lamda):
@@ -347,7 +347,7 @@ def comprobacion_Modelo_M_M_s_K(lamda, mu, s, K):
     if (((type(lamda) != (int)) and (type(lamda) != (float))) and ((type(mu) != (int)) and (type(mu) != (float)))):
         print("Lambda y Mu deben ser numeros Enteros/Decimales Positivos")
         return False
-    if(lamda < 0 or mu < 0):
+    if(lamda <= 0 or mu <= 0):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
     if(mu * s <= lamda):
@@ -415,7 +415,7 @@ def comprobacion_Modelo_M_G_1(lamda, mu, desviacion):
     if (((type(lamda) != (int)) and (type(lamda) != (float))) or ((type(mu) != (int)) and (type(mu) != (float)))):
         print("Lambda y Mu deben ser numeros Enteros/Decimales Positivos")
         return False
-    if(lamda < 0 or mu < 0):
+    if(lamda <= 0 or mu <= 0):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
     if(lamda > mu or lamda == mu):
@@ -475,7 +475,7 @@ def comprobacion_Modelo_M_D_1(lamda, mu):
     if (((type(lamda) != (int)) and (type(lamda) != (float))) or ((type(mu) != (int)) and (type(mu) != (float)))):
         print("Lambda y Mu deben ser numeros Enteros/Decimales Positivos")
         return False
-    if(lamda < 0 or mu < 0):
+    if(lamda <= 0 or mu <= 0):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
     if(lamda > mu or lamda == mu):
@@ -527,7 +527,7 @@ def comprobacion_modelo_M_Ek_s(lamda, mu, K,s):
     if ((type(lamda) != (int)) and (type(lamda) != (float))) and ((type(mu) != (int)) and (type(mu) != (float))):
         print("Lambda y Mu deben ser numeros Enteros/Decimales Positivos")
         return False
-    if(lamda < 0 or mu < 0):
+    if(lamda <= 0 or mu <= 0):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
     if(mu * s <= lamda):
