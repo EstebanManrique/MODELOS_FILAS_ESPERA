@@ -163,7 +163,7 @@ def calculo_Pn_Modelo_M_M_s(pCero, lamda, mu, s, clientes, caso):
         if caso == "=":
             if clientes == 0:
                 pN = pCero
-            elif (clientes <= 0) and (s > clientes):
+            elif (clientes >= 0) and (s > clientes):
                 pN = round((((pow(lamda/mu,clientes)) / factorial(clientes)) * pCero), 4)
             else:
                 pN = round((((pow(lamda/mu,clientes)) / (factorial(s) * pow(s, clientes-s))) * pCero), 4)
@@ -174,7 +174,7 @@ def calculo_Pn_Modelo_M_M_s(pCero, lamda, mu, s, clientes, caso):
                 pN = 1
                 acumulado = pCero
                 for cliente in range(1, clientes + 1):
-                    if (cliente <= 0) and (s > cliente):
+                    if (cliente >= 0) and (s > cliente):
                         acumulado += round((((pow(lamda/mu,cliente)) / factorial(cliente)) * pCero), 4)
                     else:
                         acumulado += round((((pow(lamda/mu,cliente)) / (factorial(s) * pow(s, cliente-s))) * pCero), 4)
@@ -185,7 +185,7 @@ def calculo_Pn_Modelo_M_M_s(pCero, lamda, mu, s, clientes, caso):
             else:
                 pN = pCero
                 for cliente in range(1, clientes+1):
-                    if (cliente <= 0) and (s > cliente):
+                    if (cliente >= 0) and (s > cliente):
                         pN += round((((pow(lamda/mu,cliente)) / factorial(cliente)) * pCero), 4)
                     else:
                         pN+= round((((pow(lamda/mu,cliente)) / (factorial(s) * pow(s, cliente-s))) * pCero), 4)
@@ -612,7 +612,7 @@ def promedio(lista):
 #comprobacion_Modelo_M_M_1(2.2,10)
 
 #modelo_M_M_s(100,60,"h",2)
-#calculo_Pn_Modelo_M_M_s(0.090909, 100, 60, 2, 3, "<")
+#calculo_Pn_Modelo_M_M_s(0.0909, 100, 60, 2, 3, ">")
 
 #calculo_Pn_Modelo_M_M_s_K(0.14, 10, 7, 2, 4, 4, "=")
 
