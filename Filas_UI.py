@@ -11,6 +11,7 @@ from matplotlib.figure import Figure
 import tkinter as tk
 from tkinter import ttk
 from tkinter import font as tkFont
+import time
 
 import matplotlib
 matplotlib.use("TkAgg")
@@ -86,6 +87,9 @@ class App(tk.Tk):
             suma += element
         return (suma / len(lista))
 
+    #-------------------------------------------------
+    #Costos y Probabilidades
+    
     def comprobacionPn(self, clientes, caso,widget,factor):
 
         self.errormsgprob.set('')
@@ -129,27 +133,112 @@ class App(tk.Tk):
         
         self.labelsProb(probWidget,arreglo,method,arreglo_prob)
         
-        """
-        f = Figure(figsize=(5, 5), dpi=100)
-        a = f.add_subplot(111)
-        a.plot(indiceHistoricos, infoArchivo[1], label="Tiempo en Cola")
-        a.plot(indiceHistoricos, infoArchivo[2], label="Tiempo en Sistema")
-        a.plot(indiceHistoricos, puntosCola,
-               label="Promedio en Cola (" + str(promedioCola)+")")
-        a.plot(indiceHistoricos, puntosSistema,
-               label="Promedio en Sistema (" + str(promedioSistema)+")")
-        a.set_xticks(
-            range(indiceHistoricos[0], indiceHistoricos[len(indiceHistoricos) - 1] + 1))
-        a.set_ylabel("Numero de simulacion")
-        a.set_xlabel("Unidades de tiempo")
-        a.legend()
-        canvas = FigureCanvasTkAgg(f, master=grafica_frame)
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        title = tk.Label(probWidget,
+             text="Costos", font=("Castellar", 13))
+        title.grid(row=5, column=0,  padx=15, pady=(20,0) , columnspan=15)
+        
+        cs_label=tk.Label(probWidget,text="Costos Clientes:",font=("Verdana", 10))
+        cs_label.grid(row=6, column=0,  padx=(20,0), pady=5, columnspan=3)
 
-        toolbar = NavigationToolbar2Tk(canvas, grafica_frame)
-        toolbar.update()
-        canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        cs_input = tk.Entry(probWidget, width=10)
+        cs_input.grid(column=3, row=6, padx=(5,0),columnspan=2)
+        
+        cw_label=tk.Label(probWidget,text="Costos Clientes:",font=("Verdana", 10))
+        cw_label.grid(row=6, column=5,  padx=(20,0), pady=5, columnspan=3)
+
+        cw_input = tk.Entry(probWidget, width=10)
+        cw_input.grid(column=8, row=6, padx=(0,0),columnspan=1)
+        
+        if method =="mg1":
+           x=7
+           y=8
+        else:
+            x=8
+            y=9
+        costosBtn= tk.Button(probWidget,
+                   text="Calcular",
+                   font=("Verdana", 7),
+                   command=lambda: self.calculo_Costos(15, 12, arreglo[1][x], arreglo[1][y],method,probWidget))
+        costosBtn.grid(column=9, row=6, columnspan=3, pady=10)
+        
+
+   
+    def calculo_Costos(self,Cw, Cs, valoresServidores, valoresLq, carpeta,probWidget):
+        
+        self.creacionCarpeta(carpeta)
+        valoresCw = []
+        valoresCs = []
+        valoresCt = []
+        info_tabla = []
+        info_tabla.append(["Ct (USD)", "Cw (USD)", "Cs (USD)"])
+        for index in range(0, len(valoresServidores)):
+            valoresCw.append(round(valoresLq[index] * Cw, 6))
+            valoresCs.append(round(valoresServidores[index] * Cs, 6))
+            valoresCt.append(round(valoresCw[index] + valoresCs[index], 6))
+            info_tabla.append([valoresCt[index],valoresCw[index], valoresCs[index]])
+    
+        costoOriginal = valoresCw[0] ##ESTE ES EL COSTO A DESPLEGAR EN LA PARTE DE ABAJO
+    
+        try:
+            self.escrituraCsv(info_tabla, carpeta)
+        except:
+            print("No se pudo generar el archivo csv")
+            
+      
+        f = Figure(figsize=(6, 5), dpi=100)
+        a = f.add_subplot(111)
+        a.plot(valoresServidores, valoresCw, label="Costo por tiempo espera (USD)")
+        a.plot(valoresServidores, valoresCs, label="Costo por servicio (USD)")
+        a.plot(valoresServidores, valoresCt, label="Costo Total Esperado (USD)")
+
+        a.set_xticks(range(valoresServidores[0], valoresServidores[len(valoresServidores) - 1] + 1))
+        a.set_ylabel("Costo por unidad de tiempo (USD)")
+        a.set_xlabel("Numero de servidores atendiendo a clientes")
+        a.legend()
+        canvas = FigureCanvasTkAgg(f, master=probWidget)
+        canvas.get_tk_widget().grid(row=9,column=0,columnspan=14)
+        
+        toolbarFrame = tk.Frame(master=probWidget)
+        toolbarFrame.grid(row=10,column=0,columnspan=14)
+        toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
+     
+    
         """
+       
+        plt.plot(valoresServidores, valoresCw, label="Costo por tiempo espera (USD)")
+        plt.plot(valoresServidores, valoresCs, label="Costo por servicio (USD)")
+        plt.plot(valoresServidores, valoresCt, label="Costo Total Esperado (USD)")
+        plt.xlabel("Numero de servidores atendiendo a clientes")
+        plt.ylabel("Costo por unidad de tiempo (USD)")
+        plt.xticks(range(valoresServidores[0], valoresServidores[len(valoresServidores) - 1] + 1))
+        
+        plt.legend()
+        plt.show()
+        """
+    
+    def creacionCarpeta(self,nombreCarpeta):
+        pathActual = os.getcwd()
+        pathActual = pathActual.replace("\\", "/")
+        pathCarpeta = pathActual + "/" + nombreCarpeta + "/"
+        if os.path.exists(pathCarpeta):
+            pass
+        else:
+            os.mkdir(pathCarpeta)
+    
+    def escrituraCsv(self,datos, carpetaArchivo):
+        pathActual = os.getcwd()
+        pathActual = pathActual.replace("\\", "/")
+        pathActual = pathActual + "/" + carpetaArchivo + "/"
+    
+        t = time.localtime()
+        nombreArchivo = time.strftime("%H:%M:%S", t)
+        nombreArchivo = nombreArchivo.replace(":", "_") 
+        nombreArchivo += carpetaArchivo + ".csv"
+        nombreArchivo = pathActual + nombreArchivo
+    
+        with open(nombreArchivo, "w", newline = "") as file:
+            escritor = csv.writer(file)
+            escritor.writerows(datos)
 
     def labelsProb(self,probWidget,arreglo,method,arreglo_prob):
         subEquals=tk.Label(probWidget,
@@ -242,11 +331,11 @@ class App(tk.Tk):
             if method=="mmsk":
                 print("mmsk")
                 self.calculo_Pn_Modelo_M_M_s_K(arreglo[1][2],arreglo_prob[0],arreglo_prob[1],arreglo_prob[2],arreglo_prob[3],int(n.get()),caso,resContainer)
-            if method=="mg1":
+            if method=="mg1" or method =="md1" or method=="meks":
                 print("mg1")
                 self.calculo_Pn_Modelo_M_M_1(arreglo[1][1],arreglo[1][0],int(n.get()),caso,resContainer)    
-    def calculo_Pn_Modelo_M_M_1(self,pCero, p, clientes, caso,container):
     
+    def calculo_Pn_Modelo_M_M_1(self,pCero, p, clientes, caso,container):
         if caso == "=":
             if clientes == 0:
                 pN = pCero
@@ -360,7 +449,7 @@ class App(tk.Tk):
     #-------------------------------------------------------------
     #Tabla de resultados 2nda pantalla
 
-    def mm1_iniciacionDeTabla(self, arreglo, frame_result, tiempo, method, size):
+    def mm1_iniciacionDeTabla(self, arreglo, frame_result, tiempo, method, size,arreglo_prob):
         helv36 = tkFont.Font(family='Helvetica',
                              size=11, weight='bold')
         for i in range(size):
@@ -386,7 +475,7 @@ class App(tk.Tk):
                            text="Costos y Probabilidades",
                            font=("Castellar", 8),
                            fg="green",
-                            command=lambda: self.graphProb(arreglo,method,[]))
+                            command=lambda: self.graphProb(arreglo,method,arreglo_prob))
         addBtn.grid(column=0, row=10, columnspan=5, pady=10)
 
     def mm1_tabla_latex(self, arreglo, frame_result, size):
@@ -614,7 +703,7 @@ class App(tk.Tk):
         buffer3.flush()
         buffer4.flush()
 
-    def mg1_iniciacionDeTabla(self, arreglo, frame_result, tiempo, size,method):
+    def mg1_iniciacionDeTabla(self, arreglo, frame_result, tiempo, size,method,arreglo_prob):
         descripciones2 = ['Factor de utilización',
                               'Probabilidad de que primer servidor esté ocupado',
                               'Probabilidad de que el servidor n esté ocupado',
@@ -645,7 +734,7 @@ class App(tk.Tk):
                            text="Costos y Probabilidades",
                            font=("Castellar", 8),
                            fg="green",
-                           command=lambda: self.graphProb(arreglo,method,[]))
+                           command=lambda: self.graphProb(arreglo,method,arreglo_prob))
         addBtn.grid(column=0, row=10, columnspan=5, pady=10)
 
     def mg1_tabla_latex(self, arreglo, frame_result, size):
@@ -704,9 +793,22 @@ class App(tk.Tk):
         W = round((1 / (mu - lamda)), 4)
 
         arreglo_valores_UI = [p, Cn, pCero, pN, Lq, L, Wq, W]
+        valores_servidores = list(range(1,9))
+        valores_Lq = []
+        valores_Lq.append(Lq)
+        for valor in valores_servidores[1:]:
+            p_valor = round((lamda / (valor * mu)), 6)
+            primerTerminoPCero = 0
+            for index in range (0, valor): #el ciclo solo hace hasta s - 1
+                primerTerminoPCero += (pow(lamda/mu, index) / self.factorial(index))
+            PCero = round((1 / (primerTerminoPCero + (pow(lamda/mu, valor) / self.factorial(valor)) * (1 / (1 - (lamda / (valor * mu)))))), 6)
+            valores_Lq.append(round(((PCero * pow(lamda / mu, valor) * p_valor) / (self.factorial(valor) * pow((1 - p_valor), 2))), 6))
 
+        arreglo_valores_UI.append(valores_servidores)
+        arreglo_valores_UI.append(valores_Lq)
+        
         arreglo_tabla = [self.arreglo_titulo, arreglo_valores_UI]
-
+        arreglo_prob=[lamda,mu,tiempo]
         results = tk.Toplevel()
         results.title("Resultados")
 
@@ -715,7 +817,7 @@ class App(tk.Tk):
 
         # self.creacionTabla(arreglo_tabla,results,tiempo,"m/m/1",8)
         self.mm1_iniciacionDeTabla(
-            arreglo_tabla, results, tiempo, "mm1", 8)
+            arreglo_tabla, results, tiempo, "mm1", 8,arreglo_prob)
         self.mm1_tabla_latex(arreglo_tabla, results, 8)
 
     def comprobacion_Modelo_M_M_s(self, lamda, mu, s):
@@ -742,24 +844,20 @@ class App(tk.Tk):
         return True
 
     def modelo_M_M_s(self, lamda, mu, tiempo, s):
-        # r'${0}^n$'.format(str(arreglo[1][1]))
+
         p = round((lamda / (s * mu)), 4)
         temp1 = str(round((lamda/mu), 4))
         temp2 = str(self.factorial(s))
         Cn = []
-        #r'$ (\frac{{{0}}} {{n!}})^n \Longrightarrow 0 \leq n < s$.'.format(p)
+
         Cn1 = r'$ (\frac{{{0}^n}} {{n!}}) \Longrightarrow 0 \leq n < s$.'.format(
             temp1)
-        #Cn1 = "(" + str(round((lamda/mu), 4)) + " ** n) / n!"
+ 
         Cn2 = r'$ (\frac{{{0}^n}} {{ {1}({2}^ {{n-{2}}} ) }}) \Longrightarrow n\geq s$.'.format(
             temp1, temp2, s)
 
-        # Cn1 es para casos donde n = 1,2,...,s-1 y Cn2 es para casos donde n = s,s+1,...
         Cn.extend([Cn1, Cn2])
-        """if n <= (s - 1):
-            Cn = round((pow(lamda/mu, n) / factorial(n)),4)
-        else:
-            Cn = round((pow(lamda/mu, n) / (factorial(s) * pow(s, (n-s)))), 4)"""
+
         primerTerminoPCero = 0
         for index in range(0, s):  # el ciclo solo hace hasta s - 1
             primerTerminoPCero += (pow(lamda/mu, index) /
@@ -769,12 +867,10 @@ class App(tk.Tk):
         pN = []
         Pn1 = r'$ (\frac{{{0}^n}} {{n!}}){{{1}}} \Longrightarrow 0 \leq n < s$.'.format(
             temp1, pCero)
-        #Pn1 = "((" + str(round((lamda/mu), 4)) + " ** n) / n!) * " + str(pCero)
-        # Pn2 = "((" + str(round((lamda/mu), 4)) + " ** n) / (" + str(self.factorial(s)
-        #                                                           ) + " * (" + str(s) + " ** (n - " + str(s) + ")))) * " + str(pCero)
+
         Pn2 = r'$ (\frac{{{0}^n}} {{ {1}({2}^ {{n-{2}}} ) }}){{{3}}} \Longrightarrow n\geq s$.'.format(
             temp1, temp2, s, pCero)
-        # Pn1 es para casos donde 0 <= n < s y Pn2 es para casos donde n >= s
+
         pN.extend([Pn1, Pn2])
         """if n >= 0 and n < s:
             pN = round((((pow(lamda/mu,n)) / factorial(n)) * pCero), 4)
@@ -787,9 +883,25 @@ class App(tk.Tk):
         W = round((Wq + (1/mu)), 4)
        
         arreglo_valores_UI = [p, Cn, pCero, pN, Lq, L, Wq, W]
+        
+        valores_servidores = list(range(s,s + 8))
+        valores_Lq = []
+        valores_Lq.append(Lq)
+        for valor in valores_servidores[1:]:
+            p_valor = round((lamda / (valor * mu)), 6)
+            primerTerminoPCero = 0
+            for index in range (0, valor): #el ciclo solo hace hasta s - 1
+                primerTerminoPCero += (pow(lamda/mu, index) / self.factorial(index))
+            PCero = round((1 / (primerTerminoPCero + (pow(lamda/mu, valor) / self.factorial(valor)) * (1 / (1 - (lamda / (valor * mu)))))), 6)
+            valores_Lq.append(round(((PCero * pow(lamda / mu, valor) * p_valor) / (self.factorial(valor) * pow((1 - p_valor), 2))), 6))
 
+        print(valores_servidores)
+        print(valores_Lq)
+        arreglo_valores_UI.append(valores_servidores)
+        arreglo_valores_UI.append(valores_Lq)
+        
         arreglo_tabla = [self.arreglo_titulo, arreglo_valores_UI]
-        arreglo_prob=[lamda,mu,s]
+        arreglo_prob=[lamda,mu,s,tiempo]
         
         results = tk.Toplevel()
         results.title("Resultados")
@@ -841,21 +953,13 @@ class App(tk.Tk):
         #Cn1 = "(" + str(round((lamda/mu), 4)) + " ** n) / n!"
         Cn1 = r'$ (\frac{{{0}^n}} {{n!}}) \Longrightarrow 0 \leq n < s$.'.format(
             temp1)
-        """Cn2 = "(" + str(round((lamda/mu), 4)) + " ** n) / (" + \
-            str(self.factorial(s)) + \
-            " * (" + str(s) + " ** (n - " + str(s) + ")))
-        """
+
         Cn2 = r'$ (\frac{{{0}^n}} {{ {1}({2}^ {{n-{2}}} ) }}) \Longrightarrow n\geq s$.'.format(
             temp1, temp2, s)
         Cn3 = r'$ 0 \Longrightarrow n\geq K$.'
         # Cn1 es para casos donde n = 0,1,2,...,s-1,  Cn2 es para casos donde n = s,s+1,...K y Cn3 es para casos donde n > K
         Cn.extend([Cn1, Cn2, Cn3])
-        """if n <= (s - 1):
-            Cn = round(((pow((lamda / mu), n)) / (factorial(n))), 4)
-        elif n == s or n < (s + 1) or n == K:
-            Cn = round(((pow((lamda / mu), n)) / (factorial(s) * pow(s, n-s))), 4)
-        else:
-            Cn = 0"""
+
         primerTerminoPCero = 0
         for index in range(0, (s+1)):  # el ciclo solo llega a s
             primerTerminoPCero += (pow((lamda / mu), index)
@@ -866,22 +970,14 @@ class App(tk.Tk):
         pCero = round((1 / (primerTerminoPCero + (pow((lamda / mu),
                       s) / self.factorial(s)) * tercerTerminoPCero)), 4)
         pN = []
-        #Pn1 = "((" + str(round((lamda/mu), 4)) + " ** n) / n!) * " + str(pCero)
         Pn1 = r'$ (\frac{{{0}^n}} {{n!}}){{{1}}} \Longrightarrow 0 \leq n < s$.'.format(
             temp1, pCero)
         Pn2 = r'$ (\frac{{{0}^n}} {{ {1}({2}^ {{n-{2}}} ) }}){{{3}}} \Longrightarrow n\geq s$.'.format(
             temp1, temp2, s, pCero)
-        # Pn2 = "((" + str(round((lamda/mu), 4)) + " ** n) / (" + str(self.factorial(s)
-        # ) + " * (" + str(s) + " ** (n - " + str(s) + ")))) * " + str(pCero)
+
         Pn3 = r'$ 0 \Longrightarrow n\geq K$.'
-        # Pn1 es para casos donde n = 1,2,...,s-1, Pn2 es para casos donde n = s,s+1,...K y Pn3 es para casos donde n > K
         pN.extend([Pn1, Pn2, Pn3])
-        """if n <= (s - 1):
-            pN = round((((pow((lamda / mu), n)) / (factorial(n))) * pCero), 4)
-        elif n == s or n < (s + 1) or n == K:
-            pN = round((((pow((lamda / mu), n)) / (factorial(s) * pow(s, n - s))) * pCero), 4)
-        else:
-            pN = 0"""
+
         Lq = round((((pCero * (pow((lamda / mu), s)) * p) / (self.factorial(s) * (pow((1 - p), 2))))
                    * (1 - pow(p, K - s) - (K - s) * pow(p, K - s) * (1 - p))), 4)
 
@@ -898,11 +994,29 @@ class App(tk.Tk):
         W = round((Wq + (1 / mu)), 4)
         L = round((lamdaE * W), 4)
 
-
         arreglo_valores_UI = [p, Cn, pCero, pN, Lq, L, Wq, W, lamdaE]
 
+        valores_servidores = list(range(s, K+1))
+        if len(valores_servidores) > 8:
+            valores_servidores = valores_servidores[0:8]
+        valores_Lq = []
+        valores_Lq.append(Lq)
+        for valor in valores_servidores[1:]:
+            p_valor = round((lamda / (valor * mu)), 6)
+            primerTerminoPCero = 0
+            for index in range (0, (valor+1)): #el ciclo solo llega a s
+                primerTerminoPCero += (pow((lamda / mu), index)) / (self.factorial(index))
+            tercerTerminoPCero = 0
+            for index in range((valor+1), (K + 1)): #el ciclo solo llega a K
+                tercerTerminoPCero += pow(lamda / (valor * mu), (index - valor))
+            PCero = round((1 / (primerTerminoPCero + (pow((lamda / mu), valor) / self.factorial(valor)) * tercerTerminoPCero)), 6)
+            valores_Lq.append(round((((PCero * (pow((lamda / mu), valor)) * p_valor) / (self.factorial(valor) * (pow((1 - p_valor), 2)))) * (1 - pow(p_valor, K - valor) - (K- valor) * pow(p_valor, K - valor) * (1 - p_valor))), 6))
+
+        arreglo_valores_UI.append(valores_servidores)
+        arreglo_valores_UI.append(valores_Lq)
+
         arreglo_tabla = [self.arreglo_titulo, arreglo_valores_UI]
-        arreglo_prob=[lamda,mu,s,K]
+        arreglo_prob=[lamda,mu,s,K,tiempo]
         results = tk.Toplevel()
         results.title("Resultados")
         rows = []
@@ -943,16 +1057,28 @@ class App(tk.Tk):
 
         arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W]
         
+        valores_servidores = list(range(1,9))
+        valores_Lq = []
+        valores_Lq.append(Lq)
+        for valor in valores_servidores[1:]:
+            p_valor = round((lamda / (valor * mu)), 6)
+            valores_Lq.append(p_valor + round((((pow(lamda,2) * pow(desviacion,2))+ pow(p_valor,2))/(2*(1-p_valor))) , 6))
+
+        print(valores_servidores)
+        print(valores_Lq)
+        arreglo_valores_UI.append(valores_servidores)
+        arreglo_valores_UI.append(valores_Lq)
+        
         arreglo_titulo2 = ['p', 'P0',
                                'Pn', 'Lq', 'L', 'Wq', 'W']
         arreglo_tabla = [arreglo_titulo2, arreglo_valores_UI]
         results = tk.Toplevel()
         results.title("Resultados")
-
+        arreglo_prob=[lamda,mu,desviacion,tiempo]
         result_title = tk.Label(results, text='Resultados del Modelo M/G/1 :', font=(
             "Castellar", 10)).grid(column=0, row=0, padx=7, pady=15, sticky="ew", columnspan=4)
         self.mg1_iniciacionDeTabla(
-            arreglo_tabla, results, tiempo,  7,"mg1")
+            arreglo_tabla, results, tiempo,  7,"mg1",arreglo_prob)
         self.mg1_tabla_latex(arreglo_tabla, results, 7)
 
     def comprobacion_Modelo_M_D_1(self,lamda, mu):
@@ -978,27 +1104,31 @@ class App(tk.Tk):
         Wq = round((Lq/lamda), 4)
         W = round((Wq + (1/mu)), 4)
 
-        print("------- Modelo M/D/1----------")
-        print("p: "+ str(p))
-        print("P0: "+ str(pCero))
-        print("Pn: "+ str(pN))
-        print("Número promedio de clientes en la cola (Lq): "+ str(Lq) + " clientes") 
-        print("Número promedio de clientes en el sistema (L): "+ str(L) + " clientes")
-        print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
-        print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
-
         arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W]
         arreglo_titulo2 = ['p', 'P0',
                                'Pn', 'Lq', 'L', 'Wq', 'W']
-        arreglo_tabla = [arreglo_titulo2, arreglo_valores_UI]
+        
+        valores_servidores = list(range(1,9))
+        valores_Lq = []
+        valores_Lq.append(Lq)
+        for valor in valores_servidores[1:]:
+            p_valor = round((lamda / (valor * mu)), 6)
+            valores_Lq.append(p_valor + round((pow(p_valor,2)/(2*(1-p_valor))), 6))
 
+        print(valores_servidores)
+        print(valores_Lq)
+        arreglo_valores_UI.append(valores_servidores)
+        arreglo_valores_UI.append(valores_Lq)
+        
+        arreglo_tabla = [arreglo_titulo2, arreglo_valores_UI]
+        arreglo_prob=[lamda,mu,tiempo]
         results = tk.Toplevel()
         results.title("Resultados")
 
         result_title = tk.Label(results, text='Resultados del Modelo M/D/1 :', font=(
             "Castellar", 10)).grid(column=0, row=0, padx=7, pady=15, sticky="ew", columnspan=4)
         self.mg1_iniciacionDeTabla(
-            arreglo_tabla, results, tiempo,  7,"mg1")
+            arreglo_tabla, results, tiempo,  7,"mg1",arreglo_prob)
         self.mg1_tabla_latex(arreglo_tabla, results, 7)
     
     def comprobacion_modelo_M_Ek_s(self,lamda, mu, K,s):
@@ -1039,27 +1169,32 @@ class App(tk.Tk):
         W = round((Wq + (1/mu)), 4)
         L = round((lamda * W), 4)
 
-        print("------- Modelo M/Ek/s----------")
-        print("p: "+ str(p))
-        print("P0: "+ str(pCero))
-        print("Pn: "+ str(pN))
-        print("Número promedio de clientes en la cola (Lq): "+ str(Lq) + " clientes") 
-        print("Número promedio de clientes en el sistema (L): "+ str(L) + " clientes")
-        print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
-        print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
 
         arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W]
         arreglo_titulo2 = ['p', 'P0',
                                'Pn', 'Lq', 'L', 'Wq', 'W']
-        arreglo_tabla = [arreglo_titulo2, arreglo_valores_UI]
+        
+        valores_servidores = list(range(s,s + 8))
+        valores_Lq = []
+        valores_Lq.append(Lq)
+        for valor in valores_servidores[1:]:
+            p_valor = round((lamda / (valor * mu)), 6)
+            valores_Lq.append(round((((pow(lamda, 2)/(k * pow(mu, 2))) + (pow(p_valor, 2))) / (2 * (1 - p_valor))), 6))
 
+        print(valores_servidores)
+        print(valores_Lq)
+        arreglo_valores_UI.append(valores_servidores)
+        arreglo_valores_UI.append(valores_Lq)       
+        
+        arreglo_tabla = [arreglo_titulo2, arreglo_valores_UI]
+        arreglo_prob=[lamda,mu,s,k,tiempo]
         results = tk.Toplevel()
         results.title("Resultados")
 
         result_title = tk.Label(results, text='Resultados del Modelo M/Ek/s :', font=(
             "Castellar", 10)).grid(column=0, row=0, padx=7, pady=15, sticky="ew", columnspan=4)
         self.mg1_iniciacionDeTabla(
-            arreglo_tabla, results, tiempo,  7,"mg1")
+            arreglo_tabla, results, tiempo,  7,"mg1",arreglo_prob)
         self.mg1_tabla_latex(arreglo_tabla, results, 7)
    
     #-------------------------------------------------------------
