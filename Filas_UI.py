@@ -42,7 +42,7 @@ class App(tk.Tk):
                      "Modelo M/M/s/K",
                      "Modelo M/G/1",
                      "Modelo M/D/1",
-                     "Modelo M/Erlang/1")
+                     "Modelo M/Erlang/s")
 
         # Variables para manjear las opciones del menu en caso de comprobaciones
         self.option = tk.StringVar(self)
@@ -78,6 +78,7 @@ class App(tk.Tk):
         helv36 = tkFont.Font(family='Castellar', size=8)
         option_menu.config(font=helv36)
         option_menu.grid(column=1, row=0, sticky='e', **paddings, columnspan=2)
+        self.m_m_1_frame()
 
     def promedio(self, lista):
         suma = 0
@@ -85,33 +86,50 @@ class App(tk.Tk):
             suma += element
         return (suma / len(lista))
 
-    def showGraph(self, archivo):
-        grafica_frame = tk.Toplevel()
-        grafica_frame.title("Grafica Historica")
+    def comprobacionPn(self, clientes, caso,widget,factor):
 
-        if os.path.exists(archivo):
-            with open(archivo, "r", newline="") as file:
-                lector = csv.reader(file)
-                infoArchivo = []
-                for row in lector:
-                    infoArchivo.append(row)
-            numeroPuntos = int(infoArchivo[0][0])
-            indiceHistoricos = []
-            for index in range(1, numeroPuntos + 1):
-                indiceHistoricos.append(index)
-            for index in range(0, numeroPuntos):
-                infoArchivo[1][index] = float(infoArchivo[1][index])
-            for index in range(0, numeroPuntos):
-                infoArchivo[2][index] = float(infoArchivo[2][index])
+        self.errormsgprob.set('')
 
-            promedioCola = self.promedio(infoArchivo[1])
-            promedioSistema = self.promedio(infoArchivo[2])
-            puntosCola = []
-            puntosSistema = []
-            for index in range(0, numeroPuntos):
-                puntosCola.append(promedioCola)
-                puntosSistema.append(promedioSistema)
+        if clientes != '':
+            try:
+                x1 = int(clientes)                
+            except:
+                self.errormsgprob.set(
+                    'ERROR: Cliente NO es Entero')
+                self.errorMessageProb.grid_configure(column=0+factor, row=2, columnspan=4,padx=(20,0))
+                return False
+            
+            if x1 < 0:
+                self.errormsgprob.set("ERROR: valores Negativos")
+                self.errorMessageProb.grid_configure(column=0+factor, row=2, columnspan=3,padx=(20,0))
+                return False
+    
+            if x1 == 0 and caso == "<":
+                self.errormsgprob.set("Error: Clientes < 0")
+                self.errorMessageProb.grid_configure(column=0+factor, row=2, columnspan=3,padx=(20,0))
+                return False
+        else:
+            self.errormsgprob.set('Favor de dar un N')
+            self.errorMessageProb.grid_configure(column=0+factor, row=2, columnspan=3,padx=(20,0))
+            return False
+        return True
 
+    def graphProb(self,arreglo,method,arreglo_prob):
+        probWidget = tk.Toplevel()
+        probWidget.title("Graficas y probabilidades")
+
+        title = tk.Label(probWidget,
+             text="Probabilidad", font=("Castellar", 13))
+        title.grid(row=0, column=0,  padx=15, pady=(20,0) , columnspan=15)
+        
+        self.errormsgprob=  tk.StringVar()
+        self.errormsgprob.set(" ")
+        self.errorMessageProb = tk.Label(
+            probWidget,  textvariable=self.errormsgprob, font=("Castellar", 8), fg="red")
+        
+        self.labelsProb(probWidget,arreglo,method,arreglo_prob)
+        
+        """
         f = Figure(figsize=(5, 5), dpi=100)
         a = f.add_subplot(111)
         a.plot(indiceHistoricos, infoArchivo[1], label="Tiempo en Cola")
@@ -131,42 +149,218 @@ class App(tk.Tk):
         toolbar = NavigationToolbar2Tk(canvas, grafica_frame)
         toolbar.update()
         canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        """
 
-    def escrituraCsv(self, archivo, tiempoCola, tiempoSistema):
-        numeroEscenarios = 0
-        tiemposColas = []
-        tiemposSistema = []
-        if os.path.exists(archivo):
-            with open(archivo, "r", newline="") as file:
-                lector = csv.reader(file)
-                index = 0
-                for row in lector:
-                    if index == 0:
-                        numeroEscenarios = row
-                        numeroEscenarios = int(numeroEscenarios[0])
-                    if index == 1:
-                        tiemposColas = row
-                    if index == 2:
-                        tiemposSistema = row
-                    index += 1
-            numeroEscenarios += 1
-            tiemposSistema.append(str(float(tiempoSistema)))
-            tiemposColas.append(str(float(tiempoCola)))
-            with open(archivo, "w", newline="") as file:
-                escritor = csv.writer(file, delimiter=",")
-                escritor.writerow(str(numeroEscenarios))
-                escritor.writerow(tiemposColas)
-                escritor.writerow(tiemposSistema)
+    def labelsProb(self,probWidget,arreglo,method,arreglo_prob):
+        subEquals=tk.Label(probWidget,
+             text="P(N=n)", font=("Verdana", 11))
+        subEquals.grid(row=1, column=0,  padx=22, pady=5, columnspan=2)
+        
+        n_eq=tk.Label(probWidget,text="n",font=("Verdana", 10))
+        n_eq.grid(row=3, column=0,  padx=(20,0), pady=5)
+    
+        equals_input = tk.Entry(probWidget, width=10)
+        equals_input.grid(column=1, row=3, padx=(0,0))
+        
+        eq_l_eq=tk.Label(probWidget,text="=",font=("Verdana", 10))
+        eq_l_eq.grid(row=3, column=2,  padx=5, pady=5)
+        
+        res_eq_input = tk.Entry(probWidget, width=10)
+        res_eq_input.grid(column=3, row=3, padx=(0,0))
+        res_eq_input.configure(state=tk.DISABLED)
+        
+        subGre=tk.Label(probWidget,
+             text="P(N>n)", font=("Verdana", 11))
+        subGre.grid(row=1, column=5,  padx=30, pady=5,columnspan=2)
+        
+        n_gre=tk.Label(probWidget,text="n",font=("Verdana", 10))
+        n_gre.grid(row=3, column=5,  padx=(25,0), pady=5)
+        
+        greater_input = tk.Entry(probWidget, width=10)
+        greater_input.grid(column=6, row=3, padx=(0,0))
+        
+        gre_l_eq=tk.Label(probWidget,text="=",font=("Verdana", 10))
+        gre_l_eq.grid(row=3, column=7,  padx=5, pady=5)
+        
+        res_gre_input = tk.Entry(probWidget, width=10)
+        res_gre_input.grid(column=8, row=3, padx=(0,0))
+        res_gre_input.configure(state=tk.DISABLED)
+        
+        subLess=tk.Label(probWidget,
+             text="P(N<n)", font=("Verdana", 11))
+        subLess.grid(row=1, column=9,  padx=30, pady=5,columnspan=2)
+        
+        n_less=tk.Label(probWidget,text="n",font=("Verdana", 10))
+        n_less.grid(row=3, column=9,  padx=(25,0), pady=5)
+        
+        less_input = tk.Entry(probWidget, width=10)
+        less_input.grid(column=10, row=3, padx=(0,0))
+        
+        less_l_eq=tk.Label(probWidget,text="=",font=("Verdana", 10))
+        less_l_eq.grid(row=3, column=11,  padx=5, pady=5)
+        
+        less_re_input = tk.Entry(probWidget, width=10)
+        less_re_input.grid(column=12, row=3, padx=(0,10)) 
+        less_re_input.configure(state=tk.DISABLED)
+        
+        equalsBtn= tk.Button(probWidget,
+                           text="Calcular",
+                           font=("Verdana", 7),
+                
+                            command=lambda: self.probabilidades(probWidget,method,"=",equals_input,arreglo,res_eq_input,arreglo_prob))
+        equalsBtn.grid(column=0, row=4, columnspan=4, pady=10)
+         
+        greaterBtn= tk.Button(probWidget,
+                           text="Calcular",
+                           font=("Verdana", 7),
+                
+                            command=lambda: self.probabilidades(probWidget,method,">",greater_input,arreglo,res_gre_input,arreglo_prob))
+        greaterBtn.grid(column=5, row=4, columnspan=4, pady=10)
+    
+        lessBtn= tk.Button(probWidget,
+                           text="Calcular",
+                           font=("Verdana", 7),
+                
+                            command=lambda: self.probabilidades(probWidget,method,"<",less_input,arreglo,less_re_input,arreglo_prob))
+        lessBtn.grid(column=9, row=4, columnspan=4, pady=10)
+
+    def probabilidades(self,probWidget,method,caso,n,arreglo,resContainer,arreglo_prob):
+        if(caso=="="):
+            x=0
+        elif(caso==">"):
+            x=5
+        elif(caso=="<"):
+            x=9
+            
+        if self.comprobacionPn(n.get(),caso,probWidget,x):
+            if method=="mm1":
+                print("mm1")
+                self.calculo_Pn_Modelo_M_M_1(arreglo[1][2],arreglo[1][0],int(n.get()),caso,resContainer)
+            if method=="mms":
+                print("mms")
+                self.calculo_Pn_Modelo_M_M_s(arreglo[1][2],arreglo_prob[0],arreglo_prob[1],arreglo_prob[2],int(n.get()),caso,resContainer)
+            if method=="mmsk":
+                print("mmsk")
+                self.calculo_Pn_Modelo_M_M_s_K(arreglo[1][2],arreglo_prob[0],arreglo_prob[1],arreglo_prob[2],arreglo_prob[3],int(n.get()),caso,resContainer)
+            if method=="mg1":
+                print("mg1")
+                self.calculo_Pn_Modelo_M_M_1(arreglo[1][1],arreglo[1][0],int(n.get()),caso,resContainer)    
+    def calculo_Pn_Modelo_M_M_1(self,pCero, p, clientes, caso,container):
+    
+        if caso == "=":
+            if clientes == 0:
+                pN = pCero
+            else:
+                pN = round((pCero * pow(p, clientes)), 4)
+        elif caso == ">":
+            if clientes == 0:
+                pN = 1 - pCero
+            else:
+                pN = 1
+                acumulado = pCero
+                for cliente in range(1, clientes + 1):
+                    acumulado += round((pCero * pow(p, cliente)), 4)
+                pN = pN - acumulado
         else:
-            with open(archivo, "w", newline="") as file:
-                escritor = csv.writer(file, delimiter=",")
-                contenido = []
-                contenido.extend(
-                    [str(1), str(float(tiempoCola)), str((float(tiempoSistema)))])
-                for index in contenido:
-                    escritor.writerow([index])
+            if clientes == 1:
+                pN = pCero
+            else:
+                pN = pCero
+                for cliente in range(1, clientes+1):
+                    pN += round((pCero * pow(p, cliente)), 4)
+        print(round(pN, 4))
+        container.configure(state=tk.NORMAL)
+        container.delete(0,tk.END)
+        container.insert(tk.END, round(pN, 4))
+        container.configure(state=tk.DISABLED)
+        return round(pN, 4)
 
-    def mm1_iniciacionDeTabla(self, arreglo, frame_result, tiempo, path_to_csv, size):
+    def calculo_Pn_Modelo_M_M_s(self,pCero, lamda, mu, s, clientes, caso,container):
+
+        if caso == "=":
+            if clientes == 0:
+                pN = pCero
+            elif (clientes >= 0) and (s > clientes):
+                pN = round((((pow(lamda/mu,clientes)) / self.factorial(clientes)) * pCero), 4)
+            else:
+                pN = round((((pow(lamda/mu,clientes)) / (self.factorial(s) * pow(s, clientes-s))) * pCero), 4)
+        elif caso == ">":
+            if clientes == 0:
+                pN = 1 - pCero
+            else:
+                pN = 1
+                acumulado = pCero
+                for cliente in range(1, clientes + 1):
+                    if (cliente >= 0) and (s > cliente):
+                        acumulado += round((((pow(lamda/mu,cliente)) / self.factorial(cliente)) * pCero), 4)
+                    else:
+                        acumulado += round((((pow(lamda/mu,cliente)) / (self.factorial(s) * pow(s, cliente-s))) * pCero), 4)
+                pN = pN - acumulado
+        else:
+            if clientes == 1:
+                pN = pCero
+            else:
+                pN = pCero
+                for cliente in range(1, clientes+1):
+                    if (cliente >= 0) and (s > cliente):
+                        pN += round((((pow(lamda/mu,cliente)) / self.factorial(cliente)) * pCero), 4)
+                    else:
+                        pN+= round((((pow(lamda/mu,cliente)) / (self.factorial(s) * pow(s, cliente-s))) * pCero), 4)
+        print(round(pN, 4))
+        container.configure(state=tk.NORMAL)
+        container.delete(0,tk.END)
+        container.insert(tk.END, round(pN, 4))
+        container.configure(state=tk.DISABLED)
+        return(round(pN, 4))
+    
+    def calculo_Pn_Modelo_M_M_s_K(self,pCero, lamda, mu, s, K, clientes, caso,container):
+
+        if caso == "=":
+            if clientes == 0:
+                pN = pCero
+            elif clientes <= (s - 1):
+                pN = round((((pow((lamda / mu), clientes)) / (self.factorial(clientes))) * pCero), 4)
+            elif clientes == s or clientes < (s + 1) or clientes == K:
+                pN = round((((pow((lamda / mu), clientes)) / (self.factorial(s) * pow(s, clientes - s))) * pCero), 4)
+            else:
+                pN = 0
+        elif caso == ">":
+            if clientes == 0:
+                pN = 1 - pCero
+            else:
+                pN = 1
+                acumulado = pCero
+                for cliente in range(1, clientes + 1):
+                    if cliente <= (s - 1):
+                        acumulado += round((((pow((lamda / mu), cliente)) / (self.factorial(cliente))) * pCero), 4)
+                    elif cliente == s or cliente < (s + 1) or cliente == K:
+                        acumulado += round((((pow((lamda / mu), cliente)) / (self.factorial(s) * pow(s, cliente - s))) * pCero), 4)
+                    else:
+                        acumulado += 0
+                pN = pN - acumulado
+        else:
+            if clientes == 1:
+                pN = pCero
+            else:
+                pN = pCero
+                for cliente in range(1, clientes + 1):
+                    if cliente <= (s - 1):
+                        pN += round((((pow((lamda / mu), cliente)) / (self.factorial(cliente))) * pCero), 4)
+                    elif cliente == s or cliente < (s + 1) or cliente == K:
+                        pN += round((((pow((lamda / mu), cliente)) / (self.factorial(s) * pow(s, cliente - s))) * pCero), 4)
+                    else:
+                        pN += 0
+        print(round(pN, 4))
+        container.configure(state=tk.NORMAL)
+        container.delete(0,tk.END)
+        container.insert(tk.END, round(pN, 4))
+        container.configure(state=tk.DISABLED)
+        return(round(pN, 4))
+
+    #-------------------------------------------------------------
+    #Tabla de resultados 2nda pantalla
+
+    def mm1_iniciacionDeTabla(self, arreglo, frame_result, tiempo, method, size):
         helv36 = tkFont.Font(family='Helvetica',
                              size=11, weight='bold')
         for i in range(size):
@@ -191,7 +385,8 @@ class App(tk.Tk):
         addBtn = tk.Button(frame_result,
                            text="Costos y Probabilidades",
                            font=("Castellar", 8),
-                           fg="green")
+                           fg="green",
+                            command=lambda: self.graphProb(arreglo,method,[]))
         addBtn.grid(column=0, row=10, columnspan=5, pady=10)
 
     def mm1_tabla_latex(self, arreglo, frame_result, size):
@@ -229,7 +424,7 @@ class App(tk.Tk):
         buffer.flush()
         buffer2.flush()
 
-    def mms_iniciacionDeTabla(self, arreglo, frame_result, tiempo, path_to_csv, size):
+    def mms_iniciacionDeTabla(self, arreglo, frame_result, tiempo, method, size,arreglo_prob):
         helv36 = tkFont.Font(family='Helvetica',
                              size=11, weight='bold')
         x = 0
@@ -273,7 +468,8 @@ class App(tk.Tk):
         addBtn = tk.Button(frame_result,
                            text="Costos y Probabilidades",
                            font=("Castellar", 8),
-                           fg="green")
+                           fg="green",
+                           command=lambda: self.graphProb(arreglo,method,arreglo_prob))
         addBtn.grid(column=0, row=12, columnspan=5, pady=10)
 
     def mms_tabla_latex(self, arreglo, frame_result, size):
@@ -322,7 +518,7 @@ class App(tk.Tk):
         buffer3.flush()
         buffer4.flush()
 
-    def mmsK_iniciacionDeTabla(self, arreglo, frame_result, tiempo, path_to_csv, size):
+    def mmsK_iniciacionDeTabla(self, arreglo, frame_result, tiempo, method, size,arreglo_prob):
         helv36 = tkFont.Font(family='Helvetica',
                              size=11, weight='bold')
         x = 0
@@ -366,7 +562,8 @@ class App(tk.Tk):
         addBtn = tk.Button(frame_result,
                            text="Costos y Probabilidades",
                            font=("Castellar", 8),
-                           fg="green")
+                           fg="green",
+                           command=lambda: self.graphProb(arreglo,method,arreglo_prob))
         addBtn.grid(column=0, row=15, columnspan=5, pady=10)
 
     def mmsK_tabla_latex(self, arreglo, frame_result, size):
@@ -417,6 +614,66 @@ class App(tk.Tk):
         buffer3.flush()
         buffer4.flush()
 
+    def mg1_iniciacionDeTabla(self, arreglo, frame_result, tiempo, size,method):
+        descripciones2 = ['Factor de utilización',
+                              'Probabilidad de que primer servidor esté ocupado',
+                              'Probabilidad de que el servidor n esté ocupado',
+                              'Promedio de clientes en la cola',
+                              'Promedio de clientes en el sistema',
+                              'Tiempo esperado en la cola',
+                              'Tiempo promeido en el sistema']
+        for i in range(size):
+            
+            l = tk.Label(frame_result,
+                         borderwidth=2,
+                         justify=tk.CENTER,
+                         foreground="White",
+                         background="green",
+                         text=(arreglo[0][i]))
+
+            l.grid(row=i+1, column=0, sticky='NSEW')
+
+        for i in range(size):
+            if(i >= 5):
+                label1 = tk.Label(
+                    frame_result, text=arreglo[0][i]+" : "+descripciones2[i] + f" ( {tiempo} )", padx=10)
+            else:
+                label1 = tk.Label(
+                    frame_result, text=arreglo[0][i]+" : "+descripciones2[i], padx=10)
+            label1.grid(column=3, row=i+1, sticky='w')
+        addBtn = tk.Button(frame_result,
+                           text="Costos y Probabilidades",
+                           font=("Castellar", 8),
+                           fg="green",
+                           command=lambda: self.graphProb(arreglo,method,[]))
+        addBtn.grid(column=0, row=10, columnspan=5, pady=10)
+
+    def mg1_tabla_latex(self, arreglo, frame_result, size):
+        buffer = BytesIO()
+
+        for i in range(size):
+
+            if i == 2:
+                math_to_image(r'${0}({1}^n)$'.format(str(arreglo[1][1]), str(
+                    arreglo[1][0])), buffer, dpi=100, format='jpg')
+                buffer.seek(0)
+
+                pimage2 = Image.open(buffer)
+                image2 = ImageTk.PhotoImage(pimage2)
+
+                l2 = tk.Label(frame_result, image=image2)
+                l2.img = image2
+                l2.grid(row=i+1, column=1, sticky='NSEW')
+            else:
+                l = tk.Label(frame_result, borderwidth=3,
+                             justify=tk.CENTER, text=(arreglo[1][i]))
+                l.grid(row=i+1, column=1, sticky='NSEW')
+
+        buffer.flush()
+
+    #-------------------------------------------------------------
+    #Modelos Matimaticos    
+
     def factorial(self, numero):
         factorial = 1
         for i in range(1, numero + 1):
@@ -445,16 +702,6 @@ class App(tk.Tk):
         L = round((lamda / (mu - lamda)), 4)
         Wq = round((lamda / (mu * (mu - lamda))), 4)
         W = round((1 / (mu - lamda)), 4)
-        """
-        print("p: "+ str(p))
-        print("Cn: " + str(Cn))
-        print("P0: "+ str(pCero))
-        print("Pn: "+ str(pN))
-        print("Número promedio de clientes en la cola (Lq): "+ str(Lq) + " clientes") 
-        print("Número promedio de clientes en el sistema (L): "+ str(L) + " clientes")
-        print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
-        print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
-        """
 
         arreglo_valores_UI = [p, Cn, pCero, pN, Lq, L, Wq, W]
 
@@ -468,7 +715,7 @@ class App(tk.Tk):
 
         # self.creacionTabla(arreglo_tabla,results,tiempo,"m/m/1",8)
         self.mm1_iniciacionDeTabla(
-            arreglo_tabla, results, tiempo, "modelo_M_M_1.csv", 8)
+            arreglo_tabla, results, tiempo, "mm1", 8)
         self.mm1_tabla_latex(arreglo_tabla, results, 8)
 
     def comprobacion_Modelo_M_M_s(self, lamda, mu, s):
@@ -479,7 +726,7 @@ class App(tk.Tk):
         """if(lamda > mu or lamda == mu):
             print("El sistema siendo planeteado NO es estable. Lambda debe ser menor a mu")
             return False"""
-        if(mu * s < lamda):
+        if(mu * s <= lamda):
             self.errorText.set(
                 "El sistema siendo planeteado NO es estable. Lambda debe ser menor a mu")
             self.errorMessage.grid(column=0, row=0, columnspan=2)
@@ -504,7 +751,7 @@ class App(tk.Tk):
         Cn1 = r'$ (\frac{{{0}^n}} {{n!}}) \Longrightarrow 0 \leq n < s$.'.format(
             temp1)
         #Cn1 = "(" + str(round((lamda/mu), 4)) + " ** n) / n!"
-        Cn2 = r'$ (\frac{{{0}^n}} {{ {1}({2}^ {{n-a}} ) }}) \Longrightarrow n\geq s$.'.format(
+        Cn2 = r'$ (\frac{{{0}^n}} {{ {1}({2}^ {{n-{2}}} ) }}) \Longrightarrow n\geq s$.'.format(
             temp1, temp2, s)
 
         # Cn1 es para casos donde n = 1,2,...,s-1 y Cn2 es para casos donde n = s,s+1,...
@@ -525,7 +772,7 @@ class App(tk.Tk):
         #Pn1 = "((" + str(round((lamda/mu), 4)) + " ** n) / n!) * " + str(pCero)
         # Pn2 = "((" + str(round((lamda/mu), 4)) + " ** n) / (" + str(self.factorial(s)
         #                                                           ) + " * (" + str(s) + " ** (n - " + str(s) + ")))) * " + str(pCero)
-        Pn2 = r'$ (\frac{{{0}^n}} {{ {1}({2}^ {{n-a}} ) }}){{{3}}} \Longrightarrow n\geq s$.'.format(
+        Pn2 = r'$ (\frac{{{0}^n}} {{ {1}({2}^ {{n-{2}}} ) }}){{{3}}} \Longrightarrow n\geq s$.'.format(
             temp1, temp2, s, pCero)
         # Pn1 es para casos donde 0 <= n < s y Pn2 es para casos donde n >= s
         pN.extend([Pn1, Pn2])
@@ -538,31 +785,19 @@ class App(tk.Tk):
         L = round((Lq + (lamda / mu)), 4)
         Wq = round((Lq / lamda), 4)
         W = round((Wq + (1/mu)), 4)
-        print("p: " + str(p))
-        #print("Cn: " + str(Cn) + ". Donde n = "+ str(n) + " y s = " + str(s))
-        print("Cn1: " + str(Cn1) + " para casos donde n = 1,2,...,s-1")
-        print("Cn2: " + str(Cn2) + " para casos donde n = s,s+1,...")
-        print("P0: " + str(pCero))
-        #print("Pn: "+ str(pN) + ". Donde n = "+ str(n) + " y s = " + str(s))
-        print("Pn1: " + str(Pn1) + " para casos donde 0 <= n < s")
-        print("Pn2: " + str(Pn2) + " para casos donde n >= s")
-        print("Número promedio de clientes en la cola (Lq): " +
-              str(Lq) + " clientes")
-        print("Número promedio de clientes en el sistema (L): " +
-              str(L) + " clientes")
-        print("Tiempo esperado en la cola (Wq): " + str(Wq) + " " + tiempo)
-        print("Tiempo promeido en el sistema (W): " + str(W) + " " + tiempo)
+       
         arreglo_valores_UI = [p, Cn, pCero, pN, Lq, L, Wq, W]
 
         arreglo_tabla = [self.arreglo_titulo, arreglo_valores_UI]
-
+        arreglo_prob=[lamda,mu,s]
+        
         results = tk.Toplevel()
         results.title("Resultados")
         rows = []
         result_title = tk.Label(results, text='Resultados del Modelo M/M/S :', font=(
             "Castellar", 10)).grid(column=0, row=0, padx=7, pady=15, sticky="ew", columnspan=4)
         # self.creacionTabla(arreglo_tabla,results,tiempo,"M/M/S",8)
-        self.mms_iniciacionDeTabla(arreglo_tabla, results, tiempo, "m/m/1", 8)
+        self.mms_iniciacionDeTabla(arreglo_tabla, results, tiempo, "mms", 8,arreglo_prob)
         self.mms_tabla_latex(arreglo_tabla, results, 8)
 
     def comprobacion_Modelo_M_M_s_K(self, lamda, mu, s, K):
@@ -570,7 +805,7 @@ class App(tk.Tk):
             self.errorText.set("El sistema NO puede aceptar valores Negativos")
             self.errorMessage.grid(column=0, row=0, columnspan=2)
             return False
-        if(mu * s < lamda):
+        if(mu * s <= lamda):
             self.errorText.set(
                 "El sistema siendo planeteado NO es estable. Lambda debe ser menor a mu")
             self.errorMessage.grid(column=0, row=0, columnspan=2)
@@ -610,7 +845,7 @@ class App(tk.Tk):
             str(self.factorial(s)) + \
             " * (" + str(s) + " ** (n - " + str(s) + ")))
         """
-        Cn2 = r'$ (\frac{{{0}^n}} {{ {1}({2}^ {{n-a}} ) }}) \Longrightarrow n\geq s$.'.format(
+        Cn2 = r'$ (\frac{{{0}^n}} {{ {1}({2}^ {{n-{2}}} ) }}) \Longrightarrow n\geq s$.'.format(
             temp1, temp2, s)
         Cn3 = r'$ 0 \Longrightarrow n\geq K$.'
         # Cn1 es para casos donde n = 0,1,2,...,s-1,  Cn2 es para casos donde n = s,s+1,...K y Cn3 es para casos donde n > K
@@ -634,7 +869,7 @@ class App(tk.Tk):
         #Pn1 = "((" + str(round((lamda/mu), 4)) + " ** n) / n!) * " + str(pCero)
         Pn1 = r'$ (\frac{{{0}^n}} {{n!}}){{{1}}} \Longrightarrow 0 \leq n < s$.'.format(
             temp1, pCero)
-        Pn2 = r'$ (\frac{{{0}^n}} {{ {1}({2}^ {{n-a}} ) }}){{{3}}} \Longrightarrow n\geq s$.'.format(
+        Pn2 = r'$ (\frac{{{0}^n}} {{ {1}({2}^ {{n-{2}}} ) }}){{{3}}} \Longrightarrow n\geq s$.'.format(
             temp1, temp2, s, pCero)
         # Pn2 = "((" + str(round((lamda/mu), 4)) + " ** n) / (" + str(self.factorial(s)
         # ) + " * (" + str(s) + " ** (n - " + str(s) + ")))) * " + str(pCero)
@@ -662,42 +897,177 @@ class App(tk.Tk):
         Wq = round((Lq / lamdaE), 4)
         W = round((Wq + (1 / mu)), 4)
         L = round((lamdaE * W), 4)
-        print("p: " + str(p))
-        #print("Cn: " + str(Cn) + ". Donde n = "+ str(n) + ", s = " + str(s) + " y K = " + str(K))
-        print("Cn1: " + str(Cn1) + " para casos donde n = 0,1,2,...,s-1")
-        print("Cn2: " + str(Cn2) + " para casos donde  n = s,s+1,...K")
-        print("Cn3: " + str(Cn3) + " para casos donde  n > K")
-        print("P0: " + str(pCero))
-        #print("Pn: "+ str(pN) + ". Donde n = "+ str(n) + " y s = " + str(s))
-        print("Pn1: " + str(Pn1) + " para casos donde n = 1,2,...,s-1")
-        print("Pn2: " + str(Pn2) + " para casos donde n = s,s+1,...K")
-        print("Pn3: " + str(Pn3) + " para casos donde  n > K")
-        print("Número promedio de clientes en la cola (Lq): " +
-              str(Lq) + " clientes")
-        print("Número promedio de clientes en el sistema (L): " +
-              str(L) + " clientes")
-        print("Tiempo esperado en la cola (Wq): " + str(Wq) + " " + tiempo)
-        print("Tiempo promeido en el sistema (W): " + str(W) + " " + tiempo)
-        print("La tasa efectiva de arribo al sistema es (lammdaE): " +
-              str(lamdaE) + " clientes por " + tiempo[:-1])
+
 
         arreglo_valores_UI = [p, Cn, pCero, pN, Lq, L, Wq, W, lamdaE]
 
         arreglo_tabla = [self.arreglo_titulo, arreglo_valores_UI]
-
+        arreglo_prob=[lamda,mu,s,K]
         results = tk.Toplevel()
         results.title("Resultados")
         rows = []
         result_title = tk.Label(results, text='Resultados del Modelo M/M/S/K :', font=(
             "Castellar", 10)).grid(column=0, row=0, padx=7, pady=15, sticky="ew", columnspan=4)
 
-        self.mmsK_iniciacionDeTabla(arreglo_tabla, results, tiempo, "m/m/1", 9)
+        self.mmsK_iniciacionDeTabla(arreglo_tabla, results, tiempo, "mmsk", 9,arreglo_prob)
         self.mmsK_tabla_latex(arreglo_tabla, results, 9)
 
+    def comprobacion_Modelo_M_G_1(self,lamda, mu, desviacion):
+        if(lamda < 0 or mu < 0):
+            self.errorText.set("El sistema NO puede aceptar valores Negativos")
+            self.errorMessage.grid(column=0, row=0, columnspan=2)
+            return False  
+        if(lamda > mu or lamda == mu):
+            self.errorText.set("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
+            self.errorMessage.grid(column=0, row=0, columnspan=2)
+            return False
+        if((type(desviacion) != int) and (type(desviacion) != float)):
+            self.errorText.set("El valor de la desviacion debe ser ENTERO/Decimal")
+            self.errorMessage.grid(column=0, row=0, columnspan=2)
+            return False
+        if(desviacion < 0):
+            self.errorText.set("El sistema M/G/1 tiene que tener una desv. estandar mayor a 0 ")
+            self.errorMessage.grid(column=0, row=0, columnspan=2)
+            return False
+        return True
+
+    def modelo_M_G_1(self,lamda, mu, tiempo, desviacion):
+        s = 1 #Pero hay que checar svenx
+        p = round((lamda / mu), 4)
+        pCero = round((1 - p), 4)
+        pN = str(pCero) + "(" + str(p) + " ** n)"    #round((pCero * pow(p, n)), 4)
+        Lq = round((((pow(lamda,2) * pow(desviacion,2))+ pow(p,2))/(2*(1-p))) , 4) #formula de pollaczek khintchine
+        L = round((p + Lq), 4)
+        Wq = round((Lq/lamda), 4)
+        W = round((Wq + (1/mu)), 4)
+
+        arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W]
+        
+        arreglo_titulo2 = ['p', 'P0',
+                               'Pn', 'Lq', 'L', 'Wq', 'W']
+        arreglo_tabla = [arreglo_titulo2, arreglo_valores_UI]
+        results = tk.Toplevel()
+        results.title("Resultados")
+
+        result_title = tk.Label(results, text='Resultados del Modelo M/G/1 :', font=(
+            "Castellar", 10)).grid(column=0, row=0, padx=7, pady=15, sticky="ew", columnspan=4)
+        self.mg1_iniciacionDeTabla(
+            arreglo_tabla, results, tiempo,  7,"mg1")
+        self.mg1_tabla_latex(arreglo_tabla, results, 7)
+
+    def comprobacion_Modelo_M_D_1(self,lamda, mu):
+        if(lamda < 0 or mu < 0):
+            self.errorText.set("El sistema NO puede aceptar valores Negativos")
+            self.errorMessage.grid(column=0, row=0, columnspan=2)
+            return False  
+        if(lamda > mu or lamda == mu):
+            self.errorText.set("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
+            self.errorMessage.grid(column=0, row=0, columnspan=2)
+            return False
+
+        return True
+    
+    def modelo_M_D_1(self,lamda, mu, tiempo):
+        s = 1 #Pero hay que checar svenx
+
+        p = round((lamda / mu), 4)
+        pCero = round((1 - p), 4)
+        pN = str(pCero) + "(" + str(p) + " ** n)"    #round((pCero * pow(p, n)), 4)
+        Lq = round((pow(p,2)/(2*(1-p))) , 4) #formula de pollaczek khintchine con desv = 0
+        L = round((p + Lq), 4)
+        Wq = round((Lq/lamda), 4)
+        W = round((Wq + (1/mu)), 4)
+
+        print("------- Modelo M/D/1----------")
+        print("p: "+ str(p))
+        print("P0: "+ str(pCero))
+        print("Pn: "+ str(pN))
+        print("Número promedio de clientes en la cola (Lq): "+ str(Lq) + " clientes") 
+        print("Número promedio de clientes en el sistema (L): "+ str(L) + " clientes")
+        print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
+        print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
+
+        arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W]
+        arreglo_titulo2 = ['p', 'P0',
+                               'Pn', 'Lq', 'L', 'Wq', 'W']
+        arreglo_tabla = [arreglo_titulo2, arreglo_valores_UI]
+
+        results = tk.Toplevel()
+        results.title("Resultados")
+
+        result_title = tk.Label(results, text='Resultados del Modelo M/D/1 :', font=(
+            "Castellar", 10)).grid(column=0, row=0, padx=7, pady=15, sticky="ew", columnspan=4)
+        self.mg1_iniciacionDeTabla(
+            arreglo_tabla, results, tiempo,  7,"mg1")
+        self.mg1_tabla_latex(arreglo_tabla, results, 7)
+    
+    def comprobacion_modelo_M_Ek_s(self,lamda, mu, K,s):
+
+        if(lamda < 0 or mu < 0):
+            self.errorText.set("El sistema NO puede aceptar valores Negativos")
+            self.errorMessage.grid(column=0, row=0, columnspan=2)
+            return False  
+        if(lamda > mu or lamda == mu):
+            self.errorText.set("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
+            self.errorMessage.grid(column=0, row=0, columnspan=2)
+            return False
+        if(K < 0):
+            self.errorText.set("El valor de K es menor a 0. NO es aceptable")
+            self.errorMessage.grid(column=0, row=0, columnspan=2)
+            return False
+        if(K % 1 != 0):
+            self.errorText.set("El valor de K NO puede ser decimal")
+            self.errorMessage.grid(column=0, row=0, columnspan=2)
+            return False
+        if(s < 0):
+            self.errorText.set("El valor de s es menor a 0. NO es aceptable")
+            self.errorMessage.grid(column=0, row=0, columnspan=2)
+            return False
+        if(s % 1 != 0):
+            self.errorText.set("El valor de s NO puede ser decimal")
+            self.errorMessage.grid(column=0, row=0, columnspan=2)
+            return False
+        return True
+    
+    def modelo_M_Ek_s(self,lamda, mu, s, tiempo, k):
+
+        p = round((lamda / (s * mu)), 4)
+        pCero = round((1 - p), 4)
+        pN = str(pCero) + "(" + str(p) + " ** n)"    #round((pCero * pow(p, n)), 4)
+        Lq = round((((1 + k) / (2 * k)) * ((pow(lamda,2)) / (mu * (mu - lamda)))), 4) #formula de pollaczek khintchine para modelo Erlang
+        Wq = round((Lq/ lamda), 4)
+        W = round((Wq + (1/mu)), 4)
+        L = round((lamda * W), 4)
+
+        print("------- Modelo M/Ek/s----------")
+        print("p: "+ str(p))
+        print("P0: "+ str(pCero))
+        print("Pn: "+ str(pN))
+        print("Número promedio de clientes en la cola (Lq): "+ str(Lq) + " clientes") 
+        print("Número promedio de clientes en el sistema (L): "+ str(L) + " clientes")
+        print("Tiempo esperado en la cola (Wq): "+ str(Wq) + " " + tiempo)
+        print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
+
+        arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W]
+        arreglo_titulo2 = ['p', 'P0',
+                               'Pn', 'Lq', 'L', 'Wq', 'W']
+        arreglo_tabla = [arreglo_titulo2, arreglo_valores_UI]
+
+        results = tk.Toplevel()
+        results.title("Resultados")
+
+        result_title = tk.Label(results, text='Resultados del Modelo M/Ek/s :', font=(
+            "Castellar", 10)).grid(column=0, row=0, padx=7, pady=15, sticky="ew", columnspan=4)
+        self.mg1_iniciacionDeTabla(
+            arreglo_tabla, results, tiempo,  7,"mg1")
+        self.mg1_tabla_latex(arreglo_tabla, results, 7)
+   
+    #-------------------------------------------------------------
+    # UI 
+    
     def m_m_1_frame(self, *args):
         # Loop para limpiar los widgets del frame para cambiar entre las opciones del menu
         self.frame['text'] = "m_m_1_frame"
-        
 
         for widget in self.frame.winfo_children():
             widget.destroy()
@@ -707,7 +1077,7 @@ class App(tk.Tk):
             "Castellar", 8)).grid(column=0, row=1, padx=10, pady=20, sticky="e")
         lambda_input = tk.Entry(self.frame, width=20)
         lambda_input.grid(column=1, row=1, padx=40)
-
+        
         mu_label = ttk.Label(self.frame,  text='Tasa de Servicio (mu) :', font=(
             "Castellar", 8)).grid(column=0, row=2, padx=10, pady=20, sticky="e")
         mu_input = tk.Entry(self.frame, width=20)
@@ -718,6 +1088,10 @@ class App(tk.Tk):
         tiempo_input = tk.Entry(self.frame, width=20)
         tiempo_input.grid(column=1, row=3, padx=10)
 
+        lambda_input.insert(tk.END, '1')
+        mu_input.insert(tk.END, '2')
+        tiempo_input.insert(tk.END, '3')
+        
         sumbit_btn = tk.Button(self.frame, text="Generar", font=(
             "Castellar", 8), command=lambda: self.aux_m_m_1_frame(lambda_input, mu_input, tiempo_input))
         sumbit_btn.grid(column=0, row=5, columnspan=3, pady=20)
@@ -733,7 +1107,7 @@ class App(tk.Tk):
                 x2 = float(mu_input.get())
 
             except:
-                self.errorText.set('Lambda, mu y n deben ser números')
+                self.errorText.set('Lambda y mu deben ser números')
                 self.errorMessage.grid(column=0, row=0, columnspan=2)
                 return
             if self.comprobacion_Modelo_M_M_1(x1, x2):
@@ -787,13 +1161,20 @@ class App(tk.Tk):
             try:
                 x1 = float(lambda_input.get())
                 x2 = float(mu_input.get())
-                x3 = int(server_input.get())
+                #x3 = int(server_input.get())
 
             except:
                 self.errorText.set(
-                    'Lambda, mu, n y el no. de servidores deben ser números')
+                    'Lambda, mu y el no. de servidores deben ser números')
                 self.errorMessage.grid(column=0, row=0, columnspan=2)
                 return
+            try:
+                x3 = int(server_input.get())
+            except:
+                self.errorText.set('El no. de servidores debe ser Entero')
+                self.errorMessage.grid(column=0, row=0, columnspan=2)
+                return
+            
             if self.comprobacion_Modelo_M_M_s(x1, x2, x3):
                 self.modelo_M_M_s(x1, x2, tiempo_input.get(), x3)
 
@@ -850,11 +1231,19 @@ class App(tk.Tk):
             try:
                 x1 = float(lambda_input.get())
                 x2 = float(mu_input.get())
-                x3 = int(server_input.get())
-                x4 = int(k_input.get())
+
             except:
                 self.errorText.set(
-                    'Lambda, mu, n y el no. de servidores deben ser números')
+                    'Lambda y mu deben ser números')
+                self.errorMessage.grid(column=0, row=0, columnspan=2)
+                return
+            try:
+                x3 = int(server_input.get())
+                x4 = int(k_input.get())
+                
+            except:
+                self.errorText.set(
+                    'El no. de servidores y K deben ser enteros')
                 self.errorMessage.grid(column=0, row=0, columnspan=2)
                 return
             if self.comprobacion_Modelo_M_M_s_K(x1, x2, x3, x4):
@@ -912,15 +1301,14 @@ class App(tk.Tk):
                     'Lambda, mu, n y el no. de servidores deben ser números')
                 self.errorMessage.grid(column=0, row=0, columnspan=2)
                 return
-            if True:
-                print("M/G/1 DEBUG")
+            if self.comprobacion_Modelo_M_G_1(x1, x2, x3):
+                self.modelo_M_G_1(x1, x2, tiempo_input.get(), x3)
                 #self.modelo_M_M_1(x1, x2, tiempo_input.get(), x4)
 
         else:
             # Mensaje de error para inputs vacios
             self.errorText.set('Favor de llenar todos los rubros')
             self.errorMessage.grid_configure(column=0, row=0, columnspan=2)
-
 
     def m_D_1_frame(self, *args):
 
@@ -961,18 +1349,16 @@ class App(tk.Tk):
                 x2 = float(mu_input.get())
 
             except:
-                self.errorText.set('Lambda, mu y n deben ser números')
+                self.errorText.set('Lambda y mu deben ser números')
                 self.errorMessage.grid(column=0, row=0, columnspan=2)
                 return
-            if True:
-                print("MD1")
+            if self.comprobacion_Modelo_M_D_1(x1, x2):
+                self.modelo_M_D_1(x1, x2, tiempo_input.get())
             # self.centrosCuadrados(x1,x2)
         else:
             # Mensaje de error para inputs vacios
             self.errorText.set('Favor de llenar todos los rubros')
             self.errorMessage.grid_configure(column=0, row=0, columnspan=2)
-
-
 
     def m_erlang_s_frame(self, *args):
 
@@ -1022,21 +1408,27 @@ class App(tk.Tk):
             try:
                 x1 = float(lambda_input.get())
                 x2 = float(mu_input.get())
-                x3 = int(server_input.get())
-                x4 = int(k_input.get())
+
             except:
                 self.errorText.set(
-                    'Lambda, mu, n y el no. de servidores deben ser números')
+                    'Lambda y mu deben ser números')
                 self.errorMessage.grid(column=0, row=0, columnspan=2)
                 return
-            if True:
-                print("Erlang")
+            try:
+                x3 = int(server_input.get())
+                x4 = int(k_input.get())
+                
+            except:
+                self.errorText.set(
+                    'El no. de servidores y K deben ser enteros')
+                self.errorMessage.grid(column=0, row=0, columnspan=2)
+                return
+            if self.comprobacion_modelo_M_Ek_s(x1,x2,x4,x3):
+                self.modelo_M_Ek_s(x1,x2,x3,tiempo_input.get(),x4)
         else:
             # Mensaje de error para inputs vacios
             self.errorText.set('Favor de llenar todos los rubros')
             self.errorMessage.grid_configure(column=0, row=0, columnspan=2)
-
-
 
     def option_changed(self, *args):
         if self.option.get() == self.menu[0]:
