@@ -1,9 +1,12 @@
 import os
 import csv
 import matplotlib.pyplot as plt
-from numpy import double
+import time
 
-nombresArchivos = ["modelo_M_M_1.csv", "modelo_M_M_s.csv", "modelo_M_M_s_K.csv", "modelo_M_G_1.csv"]
+from numpy.lib.utils import info
+
+
+nombresArchivos = ["modelo_M_M_1", "modelo_M_M_s", "modelo_M_M_s_K", "modelo_M_G_1", "modelo_M_D_1", "modelo_M_Ek_s"]
 
 def comprobacionPn(clientes, caso):
     if clientes < 0:
@@ -40,6 +43,23 @@ def modelo_M_M_1(lamda, mu, tiempo): #Se elimina n
         print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
 
         arreglo_valores_UI = [p, Cn, pCero, pN, Lq, L, Wq, W]
+
+        valores_servidores = list(range(1,9))
+        valores_Lq = []
+        valores_Lq.append(Lq)
+        for valor in valores_servidores[1:]:
+            p_valor = round((lamda / (valor * mu)), 6)
+            primerTerminoPCero = 0
+            for index in range (0, valor): #el ciclo solo hace hasta s - 1
+                primerTerminoPCero += (pow(lamda/mu, index) / factorial(index))
+            PCero = round((1 / (primerTerminoPCero + (pow(lamda/mu, valor) / factorial(valor)) * (1 / (1 - (lamda / (valor * mu)))))), 6)
+            valores_Lq.append(round(((PCero * pow(lamda / mu, valor) * p_valor) / (factorial(valor) * pow((1 - p_valor), 2))), 6))
+
+        print(valores_servidores)
+        print(valores_Lq)
+        arreglo_valores_UI.append(valores_servidores)
+        arreglo_valores_UI.append(valores_Lq)
+
         return arreglo_valores_UI
 
 def calculo_Pn_Modelo_M_M_1(pCero, p, clientes, caso): #caso aqui puede ser "=", ">" o "<"
@@ -72,7 +92,7 @@ def comprobacion_Modelo_M_M_1(lamda, mu):
     if (((type(lamda) != (int)) and (type(lamda) != (float))) or ((type(mu) != (int)) and (type(mu) != (float)))):
         print("Lambda y Mu deben ser numeros Enteros/Decimales Positivos")
         return False
-    if(lamda < 0 or mu < 0):
+    if(lamda <= 0 or mu <= 0):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
     if(lamda > mu or lamda == mu):
@@ -119,6 +139,23 @@ def modelo_M_M_s(lamda, mu, tiempo, s):
         print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
 
         arreglo_valores_UI = [p, Cn, pCero, pN, Lq, L, Wq, W]
+
+        valores_servidores = list(range(s,s + 8))
+        valores_Lq = []
+        valores_Lq.append(Lq)
+        for valor in valores_servidores[1:]:
+            p_valor = round((lamda / (valor * mu)), 6)
+            primerTerminoPCero = 0
+            for index in range (0, valor): #el ciclo solo hace hasta s - 1
+                primerTerminoPCero += (pow(lamda/mu, index) / factorial(index))
+            PCero = round((1 / (primerTerminoPCero + (pow(lamda/mu, valor) / factorial(valor)) * (1 / (1 - (lamda / (valor * mu)))))), 6)
+            valores_Lq.append(round(((PCero * pow(lamda / mu, valor) * p_valor) / (factorial(valor) * pow((1 - p_valor), 2))), 6))
+
+        print(valores_servidores)
+        print(valores_Lq)
+        arreglo_valores_UI.append(valores_servidores)
+        arreglo_valores_UI.append(valores_Lq)
+
         return arreglo_valores_UI
 
 def calculo_Pn_Modelo_M_M_s(pCero, lamda, mu, s, clientes, caso):
@@ -159,7 +196,7 @@ def comprobacion_Modelo_M_M_s(lamda, mu, s):
     if (((type(lamda) != (int)) and (type(lamda) != (float))) and ((type(mu) != (int)) and (type(mu) != (float)))):
         print("Lambda y Mu deben ser numeros Enteros/Decimales Positivos")
         return False
-    if(lamda < 0 or mu < 0):
+    if(lamda <= 0 or mu <= 0):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
     if(mu * s <= lamda):
@@ -242,6 +279,28 @@ def modelo_M_M_s_K(lamda, mu, tiempo, s, K):
         print("La tasa efectiva de arribo al sistema es (lammdaE): "+ str(lamdaE) + " clientes por " + tiempo[:-1])
 
         arreglo_valores_UI = [p, Cn, pCero, pN, Lq, L, Wq, W]
+
+        valores_servidores = list(range(s, K+1))
+        if len(valores_servidores) > 8:
+            valores_servidores = valores_servidores[0:8]
+        valores_Lq = []
+        valores_Lq.append(Lq)
+        for valor in valores_servidores[1:]:
+            p_valor = round((lamda / (valor * mu)), 6)
+            primerTerminoPCero = 0
+            for index in range (0, (valor+1)): #el ciclo solo llega a s
+                primerTerminoPCero += (pow((lamda / mu), index)) / (factorial(index))
+            tercerTerminoPCero = 0
+            for index in range((valor+1), (K + 1)): #el ciclo solo llega a K
+                tercerTerminoPCero += pow(lamda / (valor * mu), (index - valor))
+            PCero = round((1 / (primerTerminoPCero + (pow((lamda / mu), valor) / factorial(valor)) * tercerTerminoPCero)), 6)
+            valores_Lq.append(round((((PCero * (pow((lamda / mu), valor)) * p_valor) / (factorial(valor) * (pow((1 - p_valor), 2)))) * (1 - pow(p_valor, K - valor) - (K- valor) * pow(p_valor, K - valor) * (1 - p_valor))), 6))
+
+        print(valores_servidores)
+        print(valores_Lq)
+        arreglo_valores_UI.append(valores_servidores)
+        arreglo_valores_UI.append(valores_Lq)
+
         return arreglo_valores_UI
 
 def calculo_Pn_Modelo_M_M_s_K(pCero, lamda, mu, s, K, clientes, caso):
@@ -285,10 +344,10 @@ def calculo_Pn_Modelo_M_M_s_K(pCero, lamda, mu, s, K, clientes, caso):
         return(round(pN, 4))
 
 def comprobacion_Modelo_M_M_s_K(lamda, mu, s, K):
-    if (((type(lamda) != (int)) or (type(lamda) != (float))) and ((type(mu) != (int)) or (type(mu) != (float)))):
+    if (((type(lamda) != (int)) and (type(lamda) != (float))) and ((type(mu) != (int)) and (type(mu) != (float)))):
         print("Lambda y Mu deben ser numeros Enteros/Decimales Positivos")
         return False
-    if(lamda < 0 or mu < 0):
+    if(lamda <= 0 or mu <= 0):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
     if(mu * s <= lamda):
@@ -333,6 +392,19 @@ def modelo_M_G_1(lamda, mu, tiempo, desviacion):
         print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
 
         arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W]
+
+        valores_servidores = list(range(1,9))
+        valores_Lq = []
+        valores_Lq.append(Lq)
+        for valor in valores_servidores[1:]:
+            p_valor = round((lamda / (valor * mu)), 6)
+            valores_Lq.append(p_valor + round((((pow(lamda,2) * pow(desviacion,2))+ pow(p_valor,2))/(2*(1-p_valor))) , 6))
+
+        print(valores_servidores)
+        print(valores_Lq)
+        arreglo_valores_UI.append(valores_servidores)
+        arreglo_valores_UI.append(valores_Lq)
+
         return arreglo_valores_UI
 
 def calculo_Pn_Modelo_M_G_1(pCero, p, clientes, caso):
@@ -343,7 +415,7 @@ def comprobacion_Modelo_M_G_1(lamda, mu, desviacion):
     if (((type(lamda) != (int)) and (type(lamda) != (float))) or ((type(mu) != (int)) and (type(mu) != (float)))):
         print("Lambda y Mu deben ser numeros Enteros/Decimales Positivos")
         return False
-    if(lamda < 0 or mu < 0):
+    if(lamda <= 0 or mu <= 0):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
     if(lamda > mu or lamda == mu):
@@ -380,6 +452,19 @@ def modelo_M_D_1(lamda, mu, tiempo):
         print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
 
         arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W]
+
+        valores_servidores = list(range(1,9))
+        valores_Lq = []
+        valores_Lq.append(Lq)
+        for valor in valores_servidores[1:]:
+            p_valor = round((lamda / (valor * mu)), 6)
+            valores_Lq.append(p_valor + round((pow(p_valor,2)/(2*(1-p_valor))), 6))
+
+        print(valores_servidores)
+        print(valores_Lq)
+        arreglo_valores_UI.append(valores_servidores)
+        arreglo_valores_UI.append(valores_Lq)
+
         return arreglo_valores_UI
 
 def calculo_Pn_Modelo_M_D_1(pCero, p, clientes, caso):
@@ -390,7 +475,7 @@ def comprobacion_Modelo_M_D_1(lamda, mu):
     if (((type(lamda) != (int)) and (type(lamda) != (float))) or ((type(mu) != (int)) and (type(mu) != (float)))):
         print("Lambda y Mu deben ser numeros Enteros/Decimales Positivos")
         return False
-    if(lamda < 0 or mu < 0):
+    if(lamda <= 0 or mu <= 0):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
     if(lamda > mu or lamda == mu):
@@ -419,6 +504,19 @@ def modelo_M_Ek_s(lamda, mu, s, tiempo, k):
         print("Tiempo promeido en el sistema (W): "+ str(W) + " " + tiempo)
 
         arreglo_valores_UI = [p, pCero, pN, Lq, L, Wq, W]
+
+        valores_servidores = list(range(s,s + 8))
+        valores_Lq = []
+        valores_Lq.append(Lq)
+        for valor in valores_servidores[1:]:
+            p_valor = round((lamda / (valor * mu)), 6)
+            valores_Lq.append(round((((pow(lamda, 2)/(k * pow(mu, 2))) + (pow(p_valor, 2))) / (2 * (1 - p_valor))), 6))
+
+        print(valores_servidores)
+        print(valores_Lq)
+        arreglo_valores_UI.append(valores_servidores)
+        arreglo_valores_UI.append(valores_Lq)
+
         return arreglo_valores_UI
 
 def calculo_Pn_Modelo_M_Ek_s(pCero, p, clientes, caso):
@@ -429,7 +527,7 @@ def comprobacion_modelo_M_Ek_s(lamda, mu, K,s):
     if ((type(lamda) != (int)) and (type(lamda) != (float))) and ((type(mu) != (int)) and (type(mu) != (float))):
         print("Lambda y Mu deben ser numeros Enteros/Decimales Positivos")
         return False
-    if(lamda < 0 or mu < 0):
+    if(lamda <= 0 or mu <= 0):
         print("El sistema NO puede aceptar valores Negativos")
         return False  
     if(mu * s <= lamda):
@@ -450,89 +548,65 @@ def comprobacion_modelo_M_Ek_s(lamda, mu, K,s):
     return True
 
 # --- Costos ---
+def calculo_Costos(Cw, Cs, valoresServidores, valoresLq, carpeta):
+    creacionCarpeta(carpeta)
+    valoresCw = []
+    valoresCs = []
+    valoresCt = []
+    info_tabla = []
+    info_tabla.append(["Ct (USD)", "Cw (USD)", "Cs (USD)"])
+    for index in range(0, len(valoresServidores)):
+        valoresCw.append(round(valoresLq[index] * Cw, 6))
+        valoresCs.append(round(valoresServidores[index] * Cs, 6))
+        valoresCt.append(round(valoresCw[index] + valoresCs[index], 6))
+        info_tabla.append([valoresCt[index],valoresCw[index], valoresCs[index]])
 
+    costoOriginal = valoresCw[0] ##ESTE ES EL COSTO A DESPLEGAR EN LA PARTE DE ABAJO
 
-def escrituraCsv(archivo, tiempoCola, tiempoSistema):
-    numeroEscenarios = 0
-    tiemposColas = []
-    tiemposSistema = []
-    if os.path.exists(archivo):
-        with open(archivo, "r", newline="") as file:
-            lector = csv.reader(file)
-            index = 0
-            for row in lector:
-                if index == 0:
-                    numeroEscenarios = row
-                    numeroEscenarios = int(numeroEscenarios[0])
-                if index == 1:
-                    tiemposColas = row
-                if index == 2:
-                    tiemposSistema = row
-                index += 1
-        numeroEscenarios += 1
-        tiemposSistema.append(str(float(tiempoSistema)))
-        tiemposColas.append(str(float(tiempoCola)))
-        with open(archivo, "w", newline="") as file:
-            escritor = csv.writer(file, delimiter=",")
-            escritor.writerow(str(numeroEscenarios))
-            escritor.writerow(tiemposColas)
-            escritor.writerow(tiemposSistema)
+    try:
+        escrituraCsv(info_tabla, carpeta)
+    except:
+        print("No se pudo generar el archivo csv")
+
+    plt.plot(valoresServidores, valoresCw, label="Costo por tiempo espera (USD)")
+    plt.plot(valoresServidores, valoresCs, label="Costo por servicio (USD)")
+    plt.plot(valoresServidores, valoresCt, label="Costo Total Esperado (USD)")
+    plt.xlabel("Numero de servidores atendiendo a clientes")
+    plt.ylabel("Costo por unidad de tiempo (USD)")
+    plt.xticks(range(valoresServidores[0], valoresServidores[len(valoresServidores) - 1] + 1))
+    
+    plt.legend()
+    plt.show()
+
+def creacionCarpeta(nombreCarpeta):
+    pathActual = os.getcwd()
+    pathActual = pathActual.replace("\\", "/")
+    pathCarpeta = pathActual + "/" + nombreCarpeta + "/"
+    if os.path.exists(pathCarpeta):
+        pass
     else:
-        with open(archivo, "w", newline="") as file:
-            escritor = csv.writer(file, delimiter=",")
-            contenido = []
-            contenido.extend([str(1), str(float(tiempoCola)), str((float(tiempoSistema)))])
-            for index in contenido:
-                escritor.writerow([index])
+        os.mkdir(pathCarpeta)
 
-def resetearCsv(archivo):
-    if os.path.exists(archivo):
-        os.remove(archivo)
-    else:
-        print("El archivo estadistico ya esta reseteado")
+def escrituraCsv(datos, carpetaArchivo):
+    pathActual = os.getcwd()
+    pathActual = pathActual.replace("\\", "/")
+    pathActual = pathActual + "/" + carpetaArchivo + "/"
 
-def generarGraficaTiempos(archivo):
-    if os.path.exists(archivo):
-        with open(archivo, "r", newline="") as file:
-            lector = csv.reader(file)
-            infoArchivo = []
-            for row in lector:
-                infoArchivo.append(row)
-        numeroPuntos = int(infoArchivo[0][0])
-        indiceHistoricos = []
-        for index in range(1, numeroPuntos + 1):
-            indiceHistoricos.append(index)
-        for index in range(0, numeroPuntos):
-            infoArchivo[1][index] = float(infoArchivo[1][index])
-        for index in range(0, numeroPuntos):
-            infoArchivo[2][index] = float(infoArchivo[2][index])
+    t = time.localtime()
+    nombreArchivo = time.strftime("%H:%M:%S", t)
+    nombreArchivo = nombreArchivo.replace(":", "_") 
+    nombreArchivo += carpetaArchivo + ".csv"
+    nombreArchivo = pathActual + nombreArchivo
 
-        promedioCola = promedio(infoArchivo[1])
-        promedioSistema = promedio(infoArchivo[2])
-        puntosCola = []
-        puntosSistema = []
-        for index in range(0, numeroPuntos):
-            puntosCola.append(promedioCola)
-            puntosSistema.append(promedioSistema)
-
-        plt.plot(indiceHistoricos, infoArchivo[1], label = "Tiempo en Cola")
-        plt.plot(indiceHistoricos, infoArchivo[2], label = "Tiempo en Sistema")
-        plt.plot(indiceHistoricos, puntosCola, label = "Promedio en Cola (" + str(promedioCola)+")")
-        plt.plot(indiceHistoricos, puntosSistema, label = "Promedio en Sistema (" + str(promedioSistema)+")")
-        plt.xlabel("Numero de simulacion")
-        plt.ylabel("Unidades de tiempo")
-        plt.xticks(range(indiceHistoricos[0], indiceHistoricos[len(indiceHistoricos) - 1] + 1))
-        plt.legend()
-        plt.show()
-    else:
-        print("No se tienen registros historicos para este modelo eb particular")
+    with open(nombreArchivo, "w", newline = "") as file:
+        escritor = csv.writer(file)
+        escritor.writerows(datos)
 
 def promedio(lista):
     suma = 0
     for element in lista:
         suma += element
     return (suma / len(lista))
-
 
 #calculo_Pn_Modelo_M_M_1(0.090909, (5/6), 3, ">")
 #comprobacion_Modelo_M_M_1(2.2,10)
@@ -542,26 +616,16 @@ def promedio(lista):
 
 #calculo_Pn_Modelo_M_M_s_K(0.14, 10, 7, 2, 4, 4, "=")
 
+#modelo_M_M_1(99,101,"horas")
+#modelo_M_M_s(3687,1850,"horas",2)
+#modelo_M_M_s_K(2,3,"horas",1,3)
 #modelo_M_G_1(3,5,"horas",0.1)
 #modelo_M_Ek_s(3,5,1,"horas",4)
 #modelo_M_D_1(3,5,"horas")
 
-#modelo_M_M_1(2,3,"horas")
-#modelo_M_M_s(3687,1850,"horas",2)
-#modelo_M_M_s_K(2,3,"horas",1,3)
-
-#Segundo parametro es Lq y Tercer parametro es L                                
-#escrituraCsv(nombresArchivos[0], 10, 8) 
-#escrituraCsv(nombresArchivos[1], 85, 52)
-#escrituraCsv(nombresArchivos[2], 98, 102)
-#escrituraCsv(nombresArchivos[3], 98, 102)
-
-#resetearCsv(nombresArchivos[0])
-#resetearCsv(nombresArchivos[1])
-#resetearCsv(nombresArchivos[2])
-#resetearCsv(nombresArchivos[3])
-
-#generarGraficaTiempos(nombresArchivos[0])
-#generarGraficaTiempos(nombresArchivos[1])
-#generarGraficaTiempos(nombresArchivos[2])
-#generarGraficaTiempos(nombresArchivos[3])
+#calculo_Costos(15, 12, modelo_M_M_1(2,3,"horas")[8], modelo_M_M_1(2,3,"horas")[9], "modelo_M_M_1")
+#calculo_Costos(15, 12, modelo_M_M_s(3687,1850,"horas",2)[8], modelo_M_M_s(3687,1850,"horas",2)[9], "modelo_M_M_s")
+#calculo_Costos(15, 12, modelo_M_M_s_K(2,3,"horas",1,3)[8], modelo_M_M_s_K(2,3,"horas",1,3)[9], "modelo_M_M_s_K")
+#calculo_Costos(15, 12, modelo_M_G_1(3,5,"horas",0.1)[7], modelo_M_G_1(3,5,"horas",0.1)[8], "modelo_M_G_1")
+#calculo_Costos(15, 12, modelo_M_D_1(3,5,"horas")[7], modelo_M_D_1(3,5,"horas")[8], "modelo_M_D_1")
+#calculo_Costos(15, 12, modelo_M_Ek_s(3,5,1,"horas",4)[7], modelo_M_Ek_s(3,5,1,"horas",4)[8], "modelo_M_Ek_s")
