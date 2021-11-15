@@ -28,8 +28,8 @@ class App(tk.Tk):
         self.title('MODELOS DE FILAS DE ESPERA')
         self.descripciones = ['Factor de utilización',
                               'Notación simplificada para estado estable de sistema',
-                              'Probabilidad de que primer servidor esté ocupado',
-                              'Probabilidad de que el servidor n esté ocupado',
+                              'Probabilidad de que el sistema esté ocioso',
+                              'Probabilidad de que el sistema tenga n ',
                               'Promedio de clientes en la cola',
                               'Promedio de clientes en el sistema',
                               'Tiempo esperado en la cola',
@@ -118,6 +118,30 @@ class App(tk.Tk):
             return False
         return True
 
+    def comprobacionCostos(self,Cs,Cw,valoresServidores, valoresLq, carpeta,probWidget):
+        self.errormsgcostos.set('')
+        
+        if Cs != '' and Cw !='':
+            try:
+                x1 = float(Cs)  
+                x2 = float(Cw)  
+            except:
+                self.errormsgcostos.set(
+                    'ERROR: Favor de Ingresar numeros')
+                self.errorMessageCostos.grid_configure(column=0, row=6, columnspan=15,padx=(20,0))
+                return False
+            
+            if x1 < 0 or x2 < 0:
+                self.errormsgcostos.set("ERROR: valores Negativos")
+                self.errorMessageCostos.grid_configure(column=0, row=6, columnspan=15,padx=(20,0))
+                return False
+
+        else:
+            self.errormsgcostos.set('Favor de llenar todos los rubros')
+            self.errorMessageCostos.grid_configure(column=0, row=6, columnspan=15,padx=(20,0))
+            return False
+        self.calculo_Costos(x2, x1, valoresServidores,valoresLq,carpeta,probWidget)
+    
     def graphProb(self,arreglo,method,arreglo_prob):
         probWidget = tk.Toplevel()
         probWidget.title("Graficas y probabilidades")
@@ -131,38 +155,44 @@ class App(tk.Tk):
         self.errorMessageProb = tk.Label(
             probWidget,  textvariable=self.errormsgprob, font=("Castellar", 8), fg="red")
         
+        self.errormsgcostos =  tk.StringVar()
+        self.errormsgcostos.set(" ")
+        self.errorMessageCostos = tk.Label(
+            probWidget,  textvariable=self.errormsgcostos, font=("Castellar", 8), fg="red") 
+        
         self.labelsProb(probWidget,arreglo,method,arreglo_prob)
         
         title = tk.Label(probWidget,
              text="Costos", font=("Castellar", 13))
         title.grid(row=5, column=0,  padx=15, pady=(20,0) , columnspan=15)
         
-        cs_label=tk.Label(probWidget,text="Costos Clientes:",font=("Verdana", 10))
-        cs_label.grid(row=6, column=0,  padx=(20,0), pady=5, columnspan=3)
+        cs_label=tk.Label(probWidget,text="Costos Servidor:",font=("Verdana", 10))
+        cs_label.grid(row=7, column=0,  padx=(20,0), pady=5, columnspan=3)
 
         cs_input = tk.Entry(probWidget, width=10)
-        cs_input.grid(column=3, row=6, padx=(5,0),columnspan=2)
+        cs_input.grid(column=3, row=7, padx=(5,0),columnspan=2)
         
         cw_label=tk.Label(probWidget,text="Costos Clientes:",font=("Verdana", 10))
-        cw_label.grid(row=6, column=5,  padx=(20,0), pady=5, columnspan=3)
+        cw_label.grid(row=7, column=5,  padx=(20,0), pady=5, columnspan=3)
 
         cw_input = tk.Entry(probWidget, width=10)
-        cw_input.grid(column=8, row=6, padx=(0,0),columnspan=1)
+        cw_input.grid(column=8, row=7, padx=(0,0),columnspan=1)
         
-        if method =="mg1":
+        if method=="modelo_M_G_1" or method =="modelo_M_D_1" or method=="modelo_M_Ek_s":
            x=7
            y=8
+        elif method=="modelo_M_M_s_K":
+            x=9
+            y=10
         else:
             x=8
             y=9
         costosBtn= tk.Button(probWidget,
                    text="Calcular",
                    font=("Verdana", 7),
-                   command=lambda: self.calculo_Costos(15, 12, arreglo[1][x], arreglo[1][y],method,probWidget))
-        costosBtn.grid(column=9, row=6, columnspan=3, pady=10)
-        
-
-   
+                   command=lambda: self.comprobacionCostos(cs_input.get(), cw_input.get(),arreglo[1][x],arreglo[1][y],method,probWidget ))
+        costosBtn.grid(column=9, row=7, columnspan=3, pady=10)  
+      
     def calculo_Costos(self,Cw, Cs, valoresServidores, valoresLq, carpeta,probWidget):
         
         self.creacionCarpeta(carpeta)
@@ -177,7 +207,7 @@ class App(tk.Tk):
             valoresCt.append(round(valoresCw[index] + valoresCs[index], 6))
             info_tabla.append([valoresCt[index],valoresCw[index], valoresCs[index]])
     
-        costoOriginal = valoresCw[0] ##ESTE ES EL COSTO A DESPLEGAR EN LA PARTE DE ABAJO
+        costoOriginal = valoresCt[0] ##ESTE ES EL COSTO A DESPLEGAR EN LA PARTE DE ABAJO
     
         try:
             self.escrituraCsv(info_tabla, carpeta)
@@ -201,21 +231,11 @@ class App(tk.Tk):
         toolbarFrame = tk.Frame(master=probWidget)
         toolbarFrame.grid(row=10,column=0,columnspan=14)
         toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
-     
-    
-        """
-       
-        plt.plot(valoresServidores, valoresCw, label="Costo por tiempo espera (USD)")
-        plt.plot(valoresServidores, valoresCs, label="Costo por servicio (USD)")
-        plt.plot(valoresServidores, valoresCt, label="Costo Total Esperado (USD)")
-        plt.xlabel("Numero de servidores atendiendo a clientes")
-        plt.ylabel("Costo por unidad de tiempo (USD)")
-        plt.xticks(range(valoresServidores[0], valoresServidores[len(valoresServidores) - 1] + 1))
         
-        plt.legend()
-        plt.show()
-        """
-    
+        labelCt=tk.Label(probWidget,
+             text=("Costo Total: "+str(costoOriginal)+" USD"), font=("Castellar", 13))
+        labelCt.grid(row=11,column=0,columnspan=14)
+
     def creacionCarpeta(self,nombreCarpeta):
         pathActual = os.getcwd()
         pathActual = pathActual.replace("\\", "/")
@@ -322,16 +342,16 @@ class App(tk.Tk):
             x=9
             
         if self.comprobacionPn(n.get(),caso,probWidget,x):
-            if method=="mm1":
+            if method=="modelo_M_M_1":
                 print("mm1")
                 self.calculo_Pn_Modelo_M_M_1(arreglo[1][2],arreglo[1][0],int(n.get()),caso,resContainer)
-            if method=="mms":
+            if method=="modelo_M_M_s":
                 print("mms")
                 self.calculo_Pn_Modelo_M_M_s(arreglo[1][2],arreglo_prob[0],arreglo_prob[1],arreglo_prob[2],int(n.get()),caso,resContainer)
-            if method=="mmsk":
+            if method=="modelo_M_M_s_K":
                 print("mmsk")
                 self.calculo_Pn_Modelo_M_M_s_K(arreglo[1][2],arreglo_prob[0],arreglo_prob[1],arreglo_prob[2],arreglo_prob[3],int(n.get()),caso,resContainer)
-            if method=="mg1" or method =="md1" or method=="meks":
+            if method=="modelo_M_G_1" or method =="modelo_M_D_1" or method=="modelo_M_Ek_s":
                 print("mg1")
                 self.calculo_Pn_Modelo_M_M_1(arreglo[1][1],arreglo[1][0],int(n.get()),caso,resContainer)    
     
@@ -705,8 +725,8 @@ class App(tk.Tk):
 
     def mg1_iniciacionDeTabla(self, arreglo, frame_result, tiempo, size,method,arreglo_prob):
         descripciones2 = ['Factor de utilización',
-                              'Probabilidad de que primer servidor esté ocupado',
-                              'Probabilidad de que el servidor n esté ocupado',
+                              'Probabilidad de que el sistema esté ocioso',
+                              'Probabilidad de que el sistema tenga n ',
                               'Promedio de clientes en la cola',
                               'Promedio de clientes en el sistema',
                               'Tiempo esperado en la cola',
@@ -817,7 +837,7 @@ class App(tk.Tk):
 
         # self.creacionTabla(arreglo_tabla,results,tiempo,"m/m/1",8)
         self.mm1_iniciacionDeTabla(
-            arreglo_tabla, results, tiempo, "mm1", 8,arreglo_prob)
+            arreglo_tabla, results, tiempo, "modelo_M_M_1", 8,arreglo_prob)
         self.mm1_tabla_latex(arreglo_tabla, results, 8)
 
     def comprobacion_Modelo_M_M_s(self, lamda, mu, s):
@@ -909,7 +929,7 @@ class App(tk.Tk):
         result_title = tk.Label(results, text='Resultados del Modelo M/M/S :', font=(
             "Castellar", 10)).grid(column=0, row=0, padx=7, pady=15, sticky="ew", columnspan=4)
         # self.creacionTabla(arreglo_tabla,results,tiempo,"M/M/S",8)
-        self.mms_iniciacionDeTabla(arreglo_tabla, results, tiempo, "mms", 8,arreglo_prob)
+        self.mms_iniciacionDeTabla(arreglo_tabla, results, tiempo, "modelo_M_M_s", 8,arreglo_prob)
         self.mms_tabla_latex(arreglo_tabla, results, 8)
 
     def comprobacion_Modelo_M_M_s_K(self, lamda, mu, s, K):
@@ -1023,7 +1043,7 @@ class App(tk.Tk):
         result_title = tk.Label(results, text='Resultados del Modelo M/M/S/K :', font=(
             "Castellar", 10)).grid(column=0, row=0, padx=7, pady=15, sticky="ew", columnspan=4)
 
-        self.mmsK_iniciacionDeTabla(arreglo_tabla, results, tiempo, "mmsk", 9,arreglo_prob)
+        self.mmsK_iniciacionDeTabla(arreglo_tabla, results, tiempo, "modelo_M_M_s_K", 9,arreglo_prob)
         self.mmsK_tabla_latex(arreglo_tabla, results, 9)
 
     def comprobacion_Modelo_M_G_1(self,lamda, mu, desviacion):
@@ -1078,7 +1098,7 @@ class App(tk.Tk):
         result_title = tk.Label(results, text='Resultados del Modelo M/G/1 :', font=(
             "Castellar", 10)).grid(column=0, row=0, padx=7, pady=15, sticky="ew", columnspan=4)
         self.mg1_iniciacionDeTabla(
-            arreglo_tabla, results, tiempo,  7,"mg1",arreglo_prob)
+            arreglo_tabla, results, tiempo,  7,"modelo_M_G_1",arreglo_prob)
         self.mg1_tabla_latex(arreglo_tabla, results, 7)
 
     def comprobacion_Modelo_M_D_1(self,lamda, mu):
@@ -1128,7 +1148,7 @@ class App(tk.Tk):
         result_title = tk.Label(results, text='Resultados del Modelo M/D/1 :', font=(
             "Castellar", 10)).grid(column=0, row=0, padx=7, pady=15, sticky="ew", columnspan=4)
         self.mg1_iniciacionDeTabla(
-            arreglo_tabla, results, tiempo,  7,"mg1",arreglo_prob)
+            arreglo_tabla, results, tiempo,  7,"modelo_M_D_1",arreglo_prob)
         self.mg1_tabla_latex(arreglo_tabla, results, 7)
     
     def comprobacion_modelo_M_Ek_s(self,lamda, mu, K,s):
@@ -1138,7 +1158,7 @@ class App(tk.Tk):
             self.errorMessage.grid(column=0, row=0, columnspan=2)
             return False  
         if(lamda > mu or lamda == mu):
-            self.errorText.set("El sistema siendo planeteado NO es estable. Lamda debe ser menor a mu")
+            self.errorText.set("El sistema siendo planeteado NO es estable")
             self.errorMessage.grid(column=0, row=0, columnspan=2)
             return False
         if(K < 0):
@@ -1194,7 +1214,7 @@ class App(tk.Tk):
         result_title = tk.Label(results, text='Resultados del Modelo M/Ek/s :', font=(
             "Castellar", 10)).grid(column=0, row=0, padx=7, pady=15, sticky="ew", columnspan=4)
         self.mg1_iniciacionDeTabla(
-            arreglo_tabla, results, tiempo,  7,"mg1",arreglo_prob)
+            arreglo_tabla, results, tiempo,  7,"modelo_M_Ek_s",arreglo_prob)
         self.mg1_tabla_latex(arreglo_tabla, results, 7)
    
     #-------------------------------------------------------------
